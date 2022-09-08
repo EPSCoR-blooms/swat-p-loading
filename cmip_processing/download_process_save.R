@@ -1,114 +1,85 @@
-#this script processes the CMIP netCDF files for use in SWAT future modeling. 
 
-#load libraries
-library(ncdf4)
-library(raster) 
-library(terra) 
-library(sf)
-library(ggplot2)
-library(googledrive)
-library(tidyverse)
-library(tmap) #for sanity checks
-library(exactextractr)
+# grab shapefiles for watershed ----
 
+shape_list <- SHAPE_LIST(lake_list$LakeName[1], lake_list$LakeAbbreviation[1])
 
-
-#navigate to Drive directory ----
-
-#authorize google drive
-drive_auth()
-
-#find the folder you're interested in
-did <- drive_find(pattern = 'Future Weather Data',type = 'folder')$id
-
-#find subfolder with gdb
-floods_shape = drive_ls(as_id(did), pattern = '.gdb')$id
-floods_shape = drive_ls(as_id(floods_shape), pattern = '.gdb')$id
-floods_shape_content = drive_ls(as_id(floods_shape))$id
-floods_shape_name = drive_ls(as_id(floods_shape))$name
-
-#find the sub folder of interest with cmip data
-floods <- drive_ls(as_id(did), pattern = 'Floods Weather')$id
-
-#find the folders with netcdf files
-floods_bcsd5 <- drive_ls(path = as_id(floods), pattern = 'bcsd5')$id
-floods_bcsd5_name <- drive_ls(path = as_id(floods), pattern = 'bcsd5')$name
-floods_bcsd5 <- floods_bcsd5[1]
-
-floods_b_files <- drive_ls(path = as_id(floods_bcsd5), pattern = '.nc')$id
-floods_b_names <- drive_ls(path = as_id(floods_bcsd5), pattern = '.nc')$name
-
-#grab netCDFs and store in temp file ----
-#save file to tmp folder
-tmp = 'R.tmp'
-dir.create(tmp)
-
-#download upstream file to tmp folder
-for(i in 1:length(floods_b_files)){
-  drive_download(as_id(floods_b_files[i]),
-                 path = file.path(tmp, paste0('cmip_', floods_b_names[i])),
+#download them from drive
+for(i in 1:nrow(shape_list)){
+  drive_download(shape_list$id[i], 
+                 path = file.path(tmp_dir, shape_list$name[i]),
                  overwrite = T)
 }
 
-#this isn't working because of a file lock. Manually downloading into this tmpfile location.
-# #create the folder for the gdb files
-# dir.create(file.path(tmp, 'floods_gdb'))
-# 
-# for(j in 1:length(floods_shape_content)){
-#   drive_download(as_id(floods_shape),
-#                  path = file.path(tmp, 'floods.gdb/', floods_shape_name[j]))
-# }
+#create shape_name from metadata
+shape_name = paste0(tolower(lake_list$LakeName[1]), '.shp')
 
-# read in gdb shapefile ----
+# read in shp file and transform to WGS 84
+watershed <- st_read(file.path(tmp_dir, shape_name))
+watershed <- st_transform(watershed, 4326) #transform to WGS84
 
-floods_shp <- st_read(file.path(tmp, 'floods.shp'))
+#remove temp files
+unlink(file.path('temp', shape_list$name))
 
-floods_shp <- st_as_sf(floods_shp)
+# grab loca climate files ----
 
-floods_shp <- st_transform(floods_shp, 4326) #transform to WGS84
+clim_list <- CLIM_LIST(lake_list$LakeName[1])
 
-#do a quick reality check ----
-contents <- list.files(tmp)
-b_contents = contents[grepl('cmip', contents)]
+#download them from drive
+for(i in 1:nrow(clim_list)){
+  drive_download(clim_list$id[i], 
+                 path = file.path(tmp_dir, clim_list$name[i]),
+                 overwrite = T)
+}
 
-data <- nc_open(file.path(tmp, b_contents[1]))
-print(data)
+netcdf_file <- clim_list %>% filter(grepl('.nc', name))
+
+tempmin <- netcdf_file %>% filter(grepl('min', name))
+tempmax <- netcdf_file %>% filter(grepl('max', name))
+
+data_min <- nc_open(file.path(tmp_dir, tempmin$name))
+data_max <- nc_open(file.path(tmp_dir, tempmax$name))
+
+print(data_min)
+print(data_max)
 
 #get indices
-t <- ncvar_get(data, 'time')
-lat <- ncvar_get(data, 'latitude')
-lon <- ncvar_get(data, 'longitude')
+t <- ncvar_get(data_min, 'time')
+lat <- ncvar_get(data_min, 'lat')
+lon <- ncvar_get(data_min, 'lon')
 lon = lon - 360 #convert to degrees
 
 #get array
-pr.array <- ncvar_get(data, 'pr')
+mintemp.array <- ncvar_get(data_min, 'tasmin')
 
 #get na value
-fillvalue <- ncatt_get(data, "pr", "_FillValue")
-nc_close(data)
+fillvalue <- ncatt_get(data_min, "tasmin", "_FillValue")
+nc_close(data_min)
 
 #recode na values
-pr.array[pr.array == fillvalue$value] <- NA
+mintemp.array[mintemp.array == fillvalue$value] <- NA
+
+ncatt_get(data_min, 0, 'Projections')
 
 #grab a slice and check
-pr.slice <- pr.array[, , 50, 5]
+mintemp.slice <- mintemp.array[, , 50, 5]
 
-dim(pr.slice)
+dim(mintemp.slice)
 
-r <- raster(t(pr.slice), 
+r <- raster(t(mintemp.slice), 
             xmn=min(lon), 
             xmx=max(lon), 
             ymn=min(lat), 
             ymx=max(lat),
             crs=4326) # reported as WGS84 deg
-r <- flip(r, direction='y') #flip the coord for proper projection
+# r <- flip(r, direction='y') #flip the coord for proper projection
+r <-  #rotate the coord for proper projection
 plot(r)
 crs(r)
 
 #reality check
 tm_shape(r) +
   tm_raster() +
-  tm_shape(floods_shp) +
+  tm_shape(watershed) +
   tm_polygons() +
   tm_scale_bar() +
   tm_graticules()
@@ -133,7 +104,7 @@ for(h in 1:length(b_contents)){ #for each parameter,
   if(h !=2) { #we don't need the tas.nc file, so skip that one
     #open file
     data <- nc_open(file.path(tmp, b_contents[h]))
-  
+    
     #get indices
     t <- ncvar_get(data, 'time')
     lat <- ncvar_get(data, 'latitude')
@@ -165,7 +136,7 @@ for(h in 1:length(b_contents)){ #for each parameter,
                     ymx=max(lat),
                     crs=4326) # reported as WGS84 deg
         r <- flip(r, direction='y') #flip the coord for proper projection
-  
+        
         #grab the weighted mean value
         r_extract <- exactextractr::exact_extract(r, floods_shp, 
                                                   fun = c('weighted_mean', 'stdev'),
@@ -200,11 +171,3 @@ extract_horiz = extract_all %>%
   select(year, month, mo_yr:stdev_tasmax_degC)
 
 write.csv(extract_horiz, 'floods_cmip_projections_v2022-08-22.csv', row.names = F)
-
-## TIDY UP ----
-
-#remove temporary folder and files
-unlink(tmp, recursive = T)
-
-# suspend google authorization
-drive_deauth()
