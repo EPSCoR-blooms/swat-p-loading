@@ -11,10 +11,14 @@ library(ggplot2)
 library(googledrive)
 library(tmap) #for sanity checks
 library(exactextractr)
+library(tidync)
 
-# create temporary folder for Drive downloads ----
+# create temporary and export folders for Drive downloads/uploads ----
 tmp_dir = 'temp/'
-dir.create(tmp_dir)
+export = 'export/'
+if(!dir.exists(c(tmp_dir, export_dir))){
+  dir.create(c(tmp_dir, export_dir))
+}
 
 # navigate to Drive directories ----
 
@@ -50,15 +54,43 @@ meta_id <- drive_ls(as_id(did), pattern = 'Meta')$id
 drive_download(meta_id, 
                path = file.path(tmp_dir, 'metadata.xlsx'))
 
-#read into r
-lake_list <- read_xlsx(file.path(tmp_dir, 'metadata.xlsx'),
-                       sheet = '20220908') #if you're running a different handful of lakes, you'll need to change this.
+#get list of sheets
+sheets <- excel_sheets(file.path(tmp_dir, 'metadata.xlsx'))
+#remove future sheets
+sheets <- sheets[!grepl('future', sheets) & ! grepl('complete', sheets)]
+
+for(i in 1:length(sheets)) {
+  lake_list <- read_xlsx(file.path(tmp_dir, 'metadata.xlsx'),
+                         sheet = sheets[i]) 
+  lake_list$sheet = sheets[i]
+  if(i == 1) {
+    alllakes <- lake_list
+  } else {
+    alllakes <- full_join(alllakes, lake_list)
+  }
+}
+
+# remove previously-processed lakes
+complete <- read_xlsx(file.path(tmp_dir, 'metadata.xlsx'),
+                      sheet = 'complete')
+if(nrow(complete >0)) {
+  complete_lakes = complete$LakeName
+  lake_list <- lake_list %>% 
+    filter(LakeName != complete_lakes)
+}
+
+#remove local download
 unlink(file.path(tmp_dir, 'metadata.xlsx'))
+
 
 ## SOURCE FUNCTION SCRIPT ----
 source('cmip_functions.R')
 
 ## SOURCE DOWNLOAD PROCESS SAVE SCRIPT ----
+
+for(l in 1:nrow(lake_list)) {
+  # source('download_process_save.R')
+}
 
 ## TIDY UP ----
 

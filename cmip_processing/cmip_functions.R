@@ -6,17 +6,30 @@ SHAPE_LIST = function(lakename, lakeabb){
   print(lake_shape_content)
 }
 
-CLIM_LIST = function(lakename){
+COUNT_CLIM = function(lakename) {
   #get the watershed folder
   lake_cmip_fid = drive_ls(as_id(fid), pattern = lakename)$id
   #get the climate folder
   lake_clim_fid = drive_ls(as_id(lake_cmip_fid), pattern = 'cli')$id
-  #get the loca folder
-  lake_clim_loca = drive_ls(as_id(lake_clim_fid), pattern = 'loca5')
+}
+
+CLIM_LIST = function(lakename,num){
+  lake_clim_loca = drive_ls(as_id(clim_fid[num]), pattern = 'loca5')
   #filter out the tarball and grab id
   lake_clim_loca_fid = (lake_clim_loca %>% filter(!grepl('tar', name)))$id
   loca_clim_content = drive_ls(as_id(lake_clim_loca_fid))
   loca_clim_content = loca_clim_content %>% filter(grepl('.nc', name))
+}
+
+REMOVE_EXT = function(ncfilename){
+  substr(ncfilename, 1, nchar(ncfilename) - 3)
+}
+
+GET_VARNAME = function(ncfilename) {
+  dimensions <- tidync(file.path(tmp_dir, ncfilename))$variable$name
+  varname <- dimensions[!grepl('lat', dimensions, ignore.case = T) &
+               !grepl('lon', dimensions, ignore.case = T) &
+               !grepl('time', dimensions, ignore.case = T)]
 }
 
 HYDRO_LIST = function(lakename){
@@ -32,3 +45,6 @@ HYDRO_LIST = function(lakename){
   loca_hyd_content = loca_hyd_content %>% filter(grepl('.nc', name))
 }
 
+PROC_ORDER = function(lakename){
+  
+}

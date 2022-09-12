@@ -2,6 +2,7 @@
 #this script just checks a single layer of the NC file for each CMIP extraction and saves a plot.
 
 lake_list$LakeName
+
 ## Auburn ----
 shape_list <- SHAPE_LIST('Auburn', 'aub')
 #download them from drive
@@ -25,7 +26,9 @@ rm(shape_list, shape_name)
 
 ### grab loca climate files ----
 
-clim_list <- CLIM_LIST('Auburn')
+clim_fid <- COUNT_CLIM('Auburn')
+
+clim_list <- CLIM_LIST('Auburn', 1)
 
 #download them from drive
 drive_download(clim_list$id[1], 
