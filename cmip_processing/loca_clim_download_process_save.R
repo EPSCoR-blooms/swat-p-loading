@@ -24,7 +24,7 @@ unlink(file.path('temp', shape_list$name))
 
 clim_fid <- COUNT_CLIM(lake_list$LakeName[l])
 
-if(length(clim_fid == 1)) {
+if(length(clim_fid) == 1) {
 
   clim_list <- CLIM_LIST(lake_list$LakeName[l], 1)
   
@@ -39,6 +39,7 @@ if(length(clim_fid == 1)) {
   
   for(cf in 1:length(clim_fid)) {
     
+    cf = cf
     clim_list <- CLIM_LIST(lake_list$LakeName[l], cf)
     
     #download them from drive
@@ -55,7 +56,8 @@ netcdf_file <- list.files(tmp_dir)
 
 datelist = seq.Date(as.Date('1900-01-01'), as.Date('2051-01-01'), by = 'day')
 
-# extract each netcdf for all dates and all projections; collate data, save.
+# extract all dates and all projections ----
+
 for(n in 1:length(netcdf_file)) {
   message('Starting ', netcdf_file[n])
   var <- GET_VARNAME(netcdf_file[n])
@@ -91,7 +93,7 @@ for(n in 1:length(netcdf_file)) {
   last = as.numeric(length(t_c))
   firstdate = datelist[t_c[2]]
   lastdate = datelist[(as.numeric(t_c[1])+last)]
-  clim_dates = format(seq.Date(firstdate, lastdate, by = 'day'), '%m-%Y') #create date indices
+  clim_dates = seq.Date(firstdate, lastdate, by = 'day') #create date indices
   
   #close nc file
   nc_close(data)
@@ -114,20 +116,22 @@ for(n in 1:length(netcdf_file)) {
       r_extract <- exactextractr::exact_extract(r, watershed, 
                                                 fun = c('weighted_mean', 'stdev'),
                                                 weights = 'area')
-      r_extract$parameter = var
-      r_extract$cmip_projection = projection_list[p]
-      r_extract$date = datelist[d]
+      r_extract$date = clim_dates[d]
       
-      if(p == 1 & d == 1) {
+      if(d == 1) {
         extract_all <- r_extract
       } else {
         extract_all <- full_join(extract_all, r_extract)
       }
     }
+    extract_all$parameter = var
+    extract_all$cmip_projection = projection_list[p]
+    r_extract$date = clim_dates[d]
+    
+    #write file, will make pretty later
+    filename = paste0(lake_list$LakeName[l], '_loca_clim_', 'nc', n, '_', 'p', clim_proj[p], '_', Sys.Date(), '.csv')
+    write.csv(extract_all, file.path('export', filename), row.names = F)
   }
-  #write file, will make pretty laters
-  filename = paste0(lake_list$LakeName[l], '_loca_clim_', Sys.Date(), '.csv')
-  write.csv(extract_all, file.path('export', filename), row.names = F)
 }
 
  

@@ -15,10 +15,9 @@ library(tidync)
 
 # create temporary and export folders for Drive downloads/uploads ----
 tmp_dir = 'temp/'
-export = 'export/'
-if(!dir.exists(c(tmp_dir, export_dir))){
-  dir.create(c(tmp_dir, export_dir))
-}
+export_dir = 'export/'
+dir.create(tmp_dir)
+dir.create(export_dir)
 
 # navigate to Drive directories ----
 
@@ -89,7 +88,8 @@ source('cmip_functions.R')
 ## SOURCE DOWNLOAD PROCESS SAVE SCRIPT ----
 
 for(l in 1:nrow(lake_list)) {
-  # source('download_process_save.R')
+  # source('loca_clim_download_process_save.R')
+  # source('loca_hyd_download_process_save.R')
 }
 
 ## TIDY UP ----
