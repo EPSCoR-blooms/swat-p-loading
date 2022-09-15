@@ -88,8 +88,10 @@ source('cmip_functions.R')
 ## SOURCE DOWNLOAD PROCESS SAVE SCRIPT ----
 
 for(l in 1:nrow(lake_list)) {
-  # source('loca_clim_download_process_save.R')
-  # source('loca_hyd_download_process_save.R')
+  source('grab_watershed.R')
+  source('loca_clim_download_process_save.R')
+  source('loca_hyd_download_process_save.R')
+  # source('collate_upload.R')
 }
 
 ## TIDY UP ----

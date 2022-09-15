@@ -32,19 +32,19 @@ GET_VARNAME = function(ncfilename) {
                !grepl('time', dimensions, ignore.case = T)]
 }
 
-HYDRO_LIST = function(lakename){
+COUNT_HYDRO = function(lakename) {
   #get the watershed folder
   lake_cmip_fid = drive_ls(as_id(fid), pattern = lakename)$id
   #get the climate folder
   lake_hyd_fid = drive_ls(as_id(lake_cmip_fid), pattern = 'hyd')$id
+}
+
+HYDRO_LIST = function(lakename,num){
   #get the loca folder
-  lake_hyd_loca = drive_ls(as_id(lake_hyd_fid), pattern = 'loca_hydro5')
+  lake_hyd_loca = drive_ls(as_id(hyd_fid[num]), pattern = 'loca_hydro5')
   #filter out the tarball and grab id
   lake_hyd_loca_fid = (lake_hyd_loca %>% filter(!grepl('tar', name)))$id
   loca_hyd_content = drive_ls(as_id(lake_hyd_loca_fid))
   loca_hyd_content = loca_hyd_content %>% filter(grepl('.nc', name))
 }
 
-PROC_ORDER = function(lakename){
-  
-}
