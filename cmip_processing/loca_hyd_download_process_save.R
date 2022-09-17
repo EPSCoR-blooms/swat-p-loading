@@ -113,3 +113,6 @@ for(n in 1:length(netcdf_file)) {
   }
 
 }
+
+#remove net cdf files from tmp dir
+unlink(file.path(tmp_dir, list.files(tmp_dir)))
