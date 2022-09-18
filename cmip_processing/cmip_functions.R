@@ -48,3 +48,5 @@ HYDRO_LIST = function(lakename,num){
   loca_hyd_content = loca_hyd_content %>% filter(grepl('.nc', name))
 }
 
+# LOCA Hydrology archive - daily data
+# rainfall        - Rainfall Rate (mm/day)

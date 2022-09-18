@@ -42,6 +42,8 @@ print(folder_info)
 #filter out the pending files
 fid <- (folder_info %>% filter(!grepl('Pending', name)))$id
 
+## GRAB UPLOAD LOCATION INFO ----
+upload_id = drive_ls(as_id(did), 'extracted')$id
 
 ## GRAB THE METADATA FILE THAT CONTAINS THE LIST FOR PROCESSING ----
 # metadata file just has LakeName and LakeAbbreviation; this is just to help with iteration later.
@@ -87,11 +89,11 @@ source('cmip_functions.R')
 
 ## SOURCE DOWNLOAD PROCESS SAVE SCRIPT ----
 
-for(l in 4:nrow(lake_list)) {
-  source('grab_watershed.R')
-  source('loca_clim_download_process_save.R')
-  source('loca_hyd_download_process_save.R')
-  # source('collate_upload.R')
+for(l in 2:nrow(lake_list)) {
+  # source('grab_watershed.R')
+  # source('loca_clim_download_process_save.R')
+  # source('loca_hyd_download_process_save.R')
+  source('collate_upload.R')
 }
 
 ## TIDY UP ----
