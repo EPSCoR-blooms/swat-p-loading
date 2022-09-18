@@ -15,9 +15,12 @@ library(tidync)
 
 # create temporary and export folders for Drive downloads/uploads ----
 tmp_dir = 'temp/'
-export_dir = 'export/'
+upload_dir = 'upload/'
 dir.create(tmp_dir)
-dir.create(export_dir)
+dir.create(upload_dir)
+
+# point to local file path outside of GH to save extracted files ----
+save_dir <- 'C:/Users/steeleb/Dropbox/EPSCoR_swat/'
 
 # navigate to Drive directories ----
 
@@ -89,11 +92,11 @@ source('cmip_functions.R')
 
 ## SOURCE DOWNLOAD PROCESS SAVE SCRIPT ----
 
-for(l in 2:nrow(lake_list)) {
-  # source('grab_watershed.R')
-  # source('loca_clim_download_process_save.R')
-  # source('loca_hyd_download_process_save.R')
-  source('collate_upload.R')
+for(l in 1:nrow(lake_list)) {
+  source('grab_watershed.R')
+  source('loca_clim_download_process_save.R')
+  source('loca_hyd_download_process_save.R')
+  # source('collate_upload.R')
 }
 
 ## TIDY UP ----

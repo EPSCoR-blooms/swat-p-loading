@@ -2,7 +2,9 @@
 
 message('Colalting and uploading files for ', lake_list$LakeName[l])
 
-cmip_files <- list.files(export_dir)
+dir.create('upload')
+
+cmip_files <- list.files(save_dir)
 
 cmip_files <- cmip_files[grepl(lake_list$LakeName[l], cmip_files)] #make sure you're only grabbing lake of interest
 
@@ -40,8 +42,10 @@ for(pp in 1:length(pre_proj)){
     rename(precipitation = weighted_mean)
   df <- df %>% 
     dplyr::select(title, elevation, year, date, precipitation)
-  write.csv(df, file.path('upload', paste0(lake_list$LakeAbbreviation[l], '_precip_', pre_proj[pp], '.csv')))
-  u_id <- drive_ls(as_id(upload_id), pattern = pre_proj[pp])$id
+  write.csv(df, file.path('upload', paste0(lake_list$LakeAbbreviation[l], '_precip_', pre_proj[pp], '.csv')),
+            row.names = F)
+  ul_id <- drive_ls(as_id(upload_id), pattern = lake_list$LakeName[l])$id
+  u_id <- drive_ls(as_id(ul_id), pattern = pre_proj[pp])$id
   drive_upload(file.path('upload', paste0(lake_list$LakeAbbreviation[l], '_precip_', pre_proj[pp], '.csv')),
                path = as_id(u_id),
                name = paste0('daily_', lake_list$LakeAbbreviation[l], '_precip_', pre_proj[pp], '.csv'),
@@ -74,8 +78,10 @@ for(tp in 1:length(temp_proj)){
 
   df <- df %>% 
     dplyr::select(title, elevation, year, date, max_temp, min_temp)
-  write.csv(df, file.path('upload', paste0(lake_list$LakeAbbreviation[l], '_temp_', temp_proj[tp], '.csv')))
-  u_id <- drive_ls(as_id(upload_id), pattern = temp_proj[tp])$id
+  write.csv(df, file.path('upload', paste0(lake_list$LakeAbbreviation[l], '_temp_', temp_proj[tp], '.csv')),
+            row.names = F)
+  ul_id <- drive_ls(as_id(upload_id), pattern = lake_list$LakeName[l])$id
+  u_id <- drive_ls(as_id(ul_id), pattern = temp_proj[tp])$id
   drive_upload(file.path('upload', paste0(lake_list$LakeAbbreviation[l], '_temp_', temp_proj[tp], '.csv')),
                path = as_id(u_id),
                name = paste0('daily_', lake_list$LakeAbbreviation[l], '_temp_', temp_proj[tp], '.csv'),
@@ -106,8 +112,10 @@ for(hp in 1:length(humid_proj)){
   df <- df %>% 
     dplyr::select(title, elevation, year, date, rhd)
   
-  write.csv(df, file.path('upload', paste0(lake_list$LakeAbbreviation[l], '_humid_', humid_proj[hp], '.csv')))
-  u_id <- drive_ls(as_id(upload_id), pattern = humid_proj[hp])$id
+  write.csv(df, file.path('upload', paste0(lake_list$LakeAbbreviation[l], '_humid_', humid_proj[hp], '.csv')),
+            row.names = F)
+  ul_id <- drive_ls(as_id(upload_id), pattern = lake_list$LakeName[l])$id
+  u_id <- drive_ls(as_id(ul_id), pattern = humid_proj[hp])$id
   drive_upload(file.path('upload', paste0(lake_list$LakeAbbreviation[l], '_humid_', humid_proj[hp], '.csv')),
                path = as_id(u_id),
                name = paste0('daily_', lake_list$LakeAbbreviation[l], '_humid_', humid_proj[hp], '.csv'),
@@ -137,8 +145,10 @@ for(wp in 1:length(wind_proj)){
   df <- df %>% 
     dplyr::select(title, elevation, year, date, wnd_sp)
   
-  write.csv(df, file.path('upload', paste0(lake_list$LakeAbbreviation[l], '_wind_', wind_proj[wp], '.csv')))
-  u_id <- drive_ls(as_id(upload_id), pattern = wind_proj[wp])$id
+  write.csv(df, file.path('upload', paste0(lake_list$LakeAbbreviation[l], '_wind_', wind_proj[wp], '.csv')),
+            row.names = F)
+  ul_id <- drive_ls(as_id(upload_id), pattern = lake_list$LakeName[l])$id
+  u_id <- drive_ls(as_id(ul_id), pattern = wind_proj[wp])$id
   drive_upload(file.path('upload', paste0(lake_list$LakeAbbreviation[l], '_wind_', wind_proj[wp], '.csv')),
                path = as_id(u_id),
                name = paste0('daily_', lake_list$LakeAbbreviation[l], '_wind_', wind_proj[wp], '.csv'),
@@ -147,3 +157,4 @@ for(wp in 1:length(wind_proj)){
 
 message('Wind files uploaded for ', lake_list$LakeName[l])
 
+unlink('upload', recursive = T)

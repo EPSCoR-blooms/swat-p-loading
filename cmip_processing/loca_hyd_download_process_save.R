@@ -108,7 +108,7 @@ for(n in 1:length(netcdf_file)) {
     
     #write file, will make pretty later
     filename = paste0(lake_list$LakeName[l], '_loca_hyd_', 'nc', n, '_', 'p', hyd_proj[p], '_', Sys.Date(), '.csv')
-    write.csv(extract_all, file.path('export', filename), row.names = F)
+    write.csv(extract_all, file.path(save_dir, filename), row.names = F)
     message('Projection saved locally as ', filename)
   }
 
