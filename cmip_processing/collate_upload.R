@@ -10,7 +10,7 @@ cmip_files <- cmip_files[grepl(lake_list$LakeName[l], cmip_files)] #make sure yo
 
 # join files
 for(f in 1:length(cmip_files)){
-  df <- read.csv(file.path(export_dir, cmip_files[f]))
+  df <- read.csv(file.path(save_dir, cmip_files[f]))
   if(f == 1){
     collated <- df
   } else {
