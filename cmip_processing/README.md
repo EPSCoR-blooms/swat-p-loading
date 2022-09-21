@@ -29,17 +29,17 @@ All scripts are meant to be run with the R Project file 'cmip_processing.Rproj' 
 
 *1_authorize_source.R*: this is the primary workhorse of this repo. This script sources a number of other scripts within the repo: grab_watershed.R, loca_clim_download_process_save.R, loca_hyd_download_process_save.R. Make sure you stop to double check the lakes you're going to extract in 'lake_list' before you start the loop that sources the following files.
     
-    *grab_watershed.R*: like the name implies, this just grabs the watershed files from Google Drive for the CMIP extraction.
+ - *grab_watershed.R*: like the name implies, this just grabs the watershed files from Google Drive for the CMIP extraction.
     
-    *loca_clim_download_process_save.R*: this script extracts the climate files and saves them to a user-specified folder. Currently this is the Dropbox folder listed above. This iterates by netcdf file and per projection.
+ - *loca_clim_download_process_save.R*: this script extracts the climate files and saves them to a user-specified folder. Currently this is the Dropbox folder listed above. This iterates by netcdf file and per projection.
     
-    *loca_hyd_download_process_save.R*: this script extracts the hydrology files and saves them to a user-specified folder. Currently this is the Dropbox folder listed above. This iterates by netcdf file and per projection.
+ - *loca_hyd_download_process_save.R*: this script extracts the hydrology files and saves them to a user-specified folder. Currently this is the Dropbox folder listed above. This iterates by netcdf file and per projection.
     
 *2_collate_upload.R*: this script collates the extracted CMIP files from the user-specified folder and formats them into SWAT-friendly formats. 
 
 Sourced scripts:
     
-    *cmip_functions.R*: this is a general-use script that contains functions used in many of the scripts. 
+ - *cmip_functions.R*: this is a general-use script that contains functions used in many of the scripts. 
 
 
 ## Data citations
