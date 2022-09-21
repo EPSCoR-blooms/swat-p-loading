@@ -1,7 +1,84 @@
-
 #this script just checks a single layer of the NC file for each CMIP extraction and saves a plot.
 
-lake_list$LakeName
+#load libraries
+library(tidyverse)
+library(readxl)
+library(ncdf4)
+library(raster) 
+# library(terra) 
+library(sf)
+# library(ggplot2)
+library(googledrive)
+library(tmap) #for sanity checks
+# library(tidync)
+
+# create temporary and export folders for Drive downloads/uploads ----
+tmp_dir = 'temp/'
+dir.create(tmp_dir)
+
+# navigate to Drive directories ----
+
+#authorize google drive
+drive_auth()
+# you'll need to manually type in your account in order to move forward with the script
+
+#find the folder you're interested in 
+info <- drive_find(pattern = 'Daily Weather',type = 'folder')
+print(info) #to confirm
+
+#store the id as did
+did <- info$id
+
+
+#grab the folder identity for the watershed shapefiles
+geo_fid <- drive_ls(as_id(did), pattern = 'Shape')$id
+
+#grab the folder identity for the finalized delineations
+folder_info <- drive_ls(as_id(did), pattern = 'Final')
+print(folder_info)
+#filter out the pending files
+fid <- (folder_info %>% filter(!grepl('Pending', name)))$id
+
+## GRAB UPLOAD LOCATION INFO ----
+upload_id = drive_ls(as_id(did), 'extracted')$id
+
+## GRAB THE METADATA FILE THAT CONTAINS THE LIST FOR PROCESSING ----
+# metadata file just has LakeName and LakeAbbreviation; this is just to help with iteration later.
+
+# get drive id
+meta_id <- drive_ls(as_id(did), pattern = 'Meta')$id
+
+#save file locally
+drive_download(meta_id, 
+               path = file.path(tmp_dir, 'metadata.xlsx'))
+
+#get list of sheets
+sheets <- excel_sheets(file.path(tmp_dir, 'metadata.xlsx'))
+#remove future sheets
+sheets <- sheets[! grepl('complete', sheets)]
+
+for(i in 1:length(sheets)) {
+  lake_list <- read_xlsx(file.path(tmp_dir, 'metadata.xlsx'),
+                         sheet = sheets[i]) 
+  lake_list$sheet = sheets[i]
+  if(i == 1) {
+    alllakes <- lake_list
+  } else {
+    alllakes <- full_join(alllakes, lake_list)
+  }
+}
+
+rm(lake_list)
+
+#remove local download
+unlink(file.path(tmp_dir, 'metadata.xlsx'))
+
+
+## SOURCE FUNCTION SCRIPT ----
+source('cmip_functions.R')
+
+
+alllakes$LakeName
 
 ## Auburn ----
 shape_list <- SHAPE_LIST('Auburn', 'aub')
@@ -84,7 +161,9 @@ rm(clim_list, data_max, fillvalue, maxtemp.slice, r, tempmax, lat, lon, t, maxte
 
 ### grab loca hydro files ----
 
-hydro_list <- HYDRO_LIST('Auburn')
+hyd_fid <- COUNT_HYDRO('Auburn')
+
+hydro_list <- HYDRO_LIST('Auburn', 1)
 
 #download them from drive
 drive_download(hydro_list$id[3], 
@@ -100,10 +179,10 @@ lat <- ncvar_get(rf, 'Lat')
 lon <- ncvar_get(rf, 'Lon')
 
 #get array
-rf.array <- ncvar_get(rf, 'rainfall')
+rf.array <- ncvar_get(rf, 'precip')
 
 #get na value
-fillvalue <- ncatt_get(rf, "rainfall", "_FillValue")
+fillvalue <- ncatt_get(rf, "precip", "_FillValue")
 
 # close netcdf
 nc_close(rf)
@@ -161,7 +240,9 @@ rm(shape_list, shape_name)
 
 ### grab loca climate files ----
 
-clim_list <- CLIM_LIST('Barber')
+clim_fid <- COUNT_CLIM('Barber')
+
+clim_list <- CLIM_LIST('Barber', 1)
 
 #download them from drive
 drive_download(clim_list$id[1], 
@@ -217,7 +298,9 @@ rm(clim_list, data_max, fillvalue, maxtemp.slice, r, tempmax, lat, lon, t, maxte
 
 ### grab loca hydro files ----
 
-hydro_list <- HYDRO_LIST('Barber')
+hyd_fid <- COUNT_HYDRO('Barber')
+
+hydro_list <- HYDRO_LIST('Barber', 1)
 
 #download them from drive
 drive_download(hydro_list$id[3], 
@@ -269,6 +352,8 @@ tmap_save(filename = file.path('test', 'Barber_hydro.png'))
 unlink(file.path('temp', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
+
+
 ## China ----
 shape_list <- SHAPE_LIST('China', 'chi')
 #download them from drive
@@ -292,7 +377,9 @@ rm(shape_list, shape_name)
 
 ### grab loca climate files ----
 
-clim_list <- CLIM_LIST('China')
+clim_fid <- COUNT_CLIM('China')
+
+clim_list <- CLIM_LIST('China', 1)
 
 #download them from drive
 drive_download(clim_list$id[1], 
@@ -348,7 +435,9 @@ rm(clim_list, data_max, fillvalue, maxtemp.slice, r, tempmax, lat, lon, t, maxte
 
 ### grab loca hydro files ----
 
-hydro_list <- HYDRO_LIST('China')
+hyd_fid <- COUNT_HYDRO('China')
+
+hydro_list <- HYDRO_LIST('China', 1)
 
 #download them from drive
 drive_download(hydro_list$id[1], 
@@ -364,10 +453,10 @@ lat <- ncvar_get(rf, 'Lat')
 lon <- ncvar_get(rf, 'Lon')
 
 #get array
-rf.array <- ncvar_get(rf, 'rainfall')
+rf.array <- ncvar_get(rf, 'relHumid')
 
 #get na value
-fillvalue <- ncatt_get(rf, "rainfall", "_FillValue")
+fillvalue <- ncatt_get(rf, "relHumid", "_FillValue")
 
 # close netcdf
 nc_close(rf)
@@ -401,6 +490,7 @@ unlink(file.path('temp', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
 
+
 ## Floods ----
 shape_list <- SHAPE_LIST('Floods', 'fld')
 #download them from drive
@@ -424,7 +514,9 @@ rm(shape_list, shape_name)
 
 ### grab loca climate files ----
 
-clim_list <- CLIM_LIST('Floods')
+clim_fid <- COUNT_CLIM('Floods')
+
+clim_list <- CLIM_LIST('Floods', 1)
 
 #download them from drive
 drive_download(clim_list$id[1], 
@@ -480,7 +572,9 @@ rm(clim_list, data_max, fillvalue, maxtemp.slice, r, tempmax, lat, lon, t, maxte
 
 ### grab loca hydro files ----
 
-hydro_list <- HYDRO_LIST('Floods')
+hyd_fid <- COUNT_HYDRO('Floods')
+
+hydro_list <- HYDRO_LIST('Floods', 1)
 
 #download them from drive
 drive_download(hydro_list$id[4], 
@@ -532,6 +626,9 @@ tmap_save(filename = file.path('test', 'Floods_hydro.png'))
 unlink(file.path('temp', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
+
+
+
 ## Great ----
 shape_list <- SHAPE_LIST('Great', 'grt')
 #download them from drive
@@ -555,7 +652,9 @@ rm(shape_list, shape_name)
 
 ### grab loca climate files ----
 
-clim_list <- CLIM_LIST('Great')
+clim_fid <- COUNT_CLIM('Great')
+
+clim_list <- CLIM_LIST('Great', 1)
 
 #download them from drive
 drive_download(clim_list$id[1], 
@@ -611,7 +710,9 @@ rm(clim_list, data_max, fillvalue, maxtemp.slice, r, tempmax, lat, lon, t, maxte
 
 ### grab loca hydro files ----
 
-hydro_list <- HYDRO_LIST('Great')
+hyd_fid <- COUNT_HYDRO('Great')
+
+hydro_list <- HYDRO_LIST('Great', 1)
 
 #download them from drive
 drive_download(hydro_list$id[3], 
@@ -664,6 +765,8 @@ unlink(file.path('temp', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
 
+
+
 ## Hadlock ----
 shape_list <- SHAPE_LIST('Hadlock', 'had')
 #download them from drive
@@ -687,7 +790,9 @@ rm(shape_list, shape_name)
 
 ### grab loca climate files ----
 
-clim_list <- CLIM_LIST('Hadlock')
+clim_fid <- COUNT_CLIM('Hadlock')
+
+clim_list <- CLIM_LIST('Hadlock', 1)
 
 #download them from drive
 drive_download(clim_list$id[1], 
@@ -743,7 +848,9 @@ rm(clim_list, data_max, fillvalue, maxtemp.slice, r, tempmax, lat, lon, t, maxte
 
 ### grab loca hydro files ----
 
-hydro_list <- HYDRO_LIST('Hadlock')
+hyd_fid <- COUNT_HYDRO('Hadlock')
+
+hydro_list <- HYDRO_LIST('Hadlock', 1)
 
 #download them from drive
 drive_download(hydro_list$id[4], 
@@ -796,6 +903,8 @@ unlink(file.path('temp', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
 
+
+
 ## Jordan ----
 shape_list <- SHAPE_LIST('Jordan', 'jor')
 #download them from drive
@@ -819,7 +928,9 @@ rm(shape_list, shape_name)
 
 ### grab loca climate files ----
 
-clim_list <- CLIM_LIST('Jordan')
+clim_fid <- COUNT_CLIM('Jordan')
+
+clim_list <- CLIM_LIST('Jordan', 1)
 
 #download them from drive
 drive_download(clim_list$id[1], 
@@ -875,7 +986,9 @@ rm(clim_list, data_max, fillvalue, maxtemp.slice, r, tempmax, lat, lon, t, maxte
 
 ### grab loca hydro files ----
 
-hydro_list <- HYDRO_LIST('Jordan')
+hyd_fid <- COUNT_HYDRO('Jordan')
+
+hydro_list <- HYDRO_LIST('Jordan', 1)
 
 #download them from drive
 drive_download(hydro_list$id[4], 
@@ -891,10 +1004,10 @@ lat <- ncvar_get(rf, 'Lat')
 lon <- ncvar_get(rf, 'Lon')
 
 #get array
-rf.array <- ncvar_get(rf, 'rainfall')
+rf.array <- ncvar_get(rf, 'precip')
 
 #get na value
-fillvalue <- ncatt_get(rf, "rainfall", "_FillValue")
+fillvalue <- ncatt_get(rf, "precip", "_FillValue")
 
 # close netcdf
 nc_close(rf)
@@ -921,11 +1034,13 @@ tm_shape(r) +
   tm_scale_bar() +
   tm_graticules()
 
-tmap_save(filename = file.path('test', 'Jordan.png'))
+tmap_save(filename = file.path('test', 'Jordan_hydro.png'))
 
 # clean up 
 unlink(file.path('temp', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
+
+
 
 
 ## Rangely ----
@@ -951,7 +1066,9 @@ rm(shape_list, shape_name)
 
 ### grab loca climate files ----
 
-clim_list <- CLIM_LIST('Rangeley')
+clim_fid <- COUNT_CLIM('Rangeley')
+
+clim_list <- CLIM_LIST('Rangeley', 1)
 
 #download them from drive
 drive_download(clim_list$id[1], 
@@ -1007,7 +1124,9 @@ rm(clim_list, data_max, fillvalue, maxtemp.slice, r, tempmax, lat, lon, t, maxte
 
 ### grab loca hydro files ----
 
-hydro_list <- HYDRO_LIST('Rangeley')
+hyd_fid <- COUNT_HYDRO('Rangeley')
+
+hydro_list <- HYDRO_LIST('Rangeley', 1)
 
 #download them from drive
 drive_download(hydro_list$id[4], 
@@ -1060,6 +1179,8 @@ unlink(file.path('temp', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
 
+
+
 ## Sabattus ----
 shape_list <- SHAPE_LIST('Sabattus', 'sab')
 #download them from drive
@@ -1083,7 +1204,10 @@ rm(shape_list, shape_name)
 
 ### grab loca climate files ----
 
-clim_list <- CLIM_LIST('Sabattus')
+clim_fid <- COUNT_CLIM('Sabattus')
+
+clim_list <- CLIM_LIST('Sabattus', 1)
+
 
 #download them from drive
 drive_download(clim_list$id[1], 
@@ -1139,7 +1263,9 @@ rm(clim_list, data_max, fillvalue, maxtemp.slice, r, tempmax, lat, lon, t, maxte
 
 ### grab loca hydro files ----
 
-hydro_list <- HYDRO_LIST('Sabattus')
+hyd_fid <- COUNT_HYDRO('Sabattus')
+
+hydro_list <- HYDRO_LIST('Sabattus', 1)
 
 #download them from drive
 drive_download(hydro_list$id[2], 
@@ -1155,10 +1281,10 @@ lat <- ncvar_get(rf, 'Lat')
 lon <- ncvar_get(rf, 'Lon')
 
 #get array
-rf.array <- ncvar_get(rf, 'rainfall')
+rf.array <- ncvar_get(rf, 'windspeed')
 
 #get na value
-fillvalue <- ncatt_get(rf, "rainfall", "_FillValue")
+fillvalue <- ncatt_get(rf, "windspeed", "_FillValue")
 
 # close netcdf
 nc_close(rf)
@@ -1192,6 +1318,8 @@ unlink(file.path('temp', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
 
+
+
 ##  Sunapee ----
 shape_list <- SHAPE_LIST('Sunapee', 'sun')
 #download them from drive
@@ -1215,7 +1343,10 @@ rm(shape_list, shape_name)
 
 ### grab loca climate files ----
 
-clim_list <- CLIM_LIST('Sunapee')
+clim_fid <- COUNT_CLIM('Sunapee')
+
+clim_list <- CLIM_LIST('Sunapee', 1)
+
 
 #download them from drive
 drive_download(clim_list$id[1], 
@@ -1271,7 +1402,9 @@ rm(clim_list, data_max, fillvalue, maxtemp.slice, r, tempmax, lat, lon, t, maxte
 
 ### grab loca hydro files ----
 
-hydro_list <- HYDRO_LIST('Sunapee')
+hyd_fid <- COUNT_HYDRO('Sunapee')
+
+hydro_list <- HYDRO_LIST('Sunapee', 1)
 
 #download them from drive
 drive_download(hydro_list$id[4], 
@@ -1287,10 +1420,10 @@ lat <- ncvar_get(rf, 'Lat')
 lon <- ncvar_get(rf, 'Lon')
 
 #get array
-rf.array <- ncvar_get(rf, 'rainfall')
+rf.array <- ncvar_get(rf, 'precip')
 
 #get na value
-fillvalue <- ncatt_get(rf, "rainfall", "_FillValue")
+fillvalue <- ncatt_get(rf, "precip", "_FillValue")
 
 # close netcdf
 nc_close(rf)
@@ -1324,6 +1457,8 @@ unlink(file.path('temp', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
 
+
+
 ## Yawgoo ----
 shape_list <- SHAPE_LIST('Yawgoo', 'yaw')
 #download them from drive
@@ -1347,7 +1482,10 @@ rm(shape_list, shape_name)
 
 ### grab loca climate files ----
 
-clim_list <- CLIM_LIST('Yawgoo')
+clim_fid <- COUNT_CLIM('Yawgoo')
+
+clim_list <- CLIM_LIST('Yawgoo', 1)
+
 
 #download them from drive
 drive_download(clim_list$id[1], 
@@ -1403,7 +1541,9 @@ rm(clim_list, data_max, fillvalue, maxtemp.slice, r, tempmax, lat, lon, t, maxte
 
 ### grab loca hydro files ----
 
-hydro_list <- HYDRO_LIST('Yawgoo')
+hyd_fid <- COUNT_HYDRO('Yawgoo')
+
+hydro_list <- HYDRO_LIST('Yawgoo', 1)
 
 #download them from drive
 drive_download(hydro_list$id[4], 
