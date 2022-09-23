@@ -20,9 +20,7 @@ library(tidync)
 
 ## create temporary and export folders for Drive downloads/uploads ----
 tmp_dir = 'temp/'
-upload_dir = 'upload/'
 dir.create(tmp_dir)
-dir.create(upload_dir)
 
 ## point to local file path outside of GH to save extracted files ----
 save_dir <- 'C:/Users/steeleb/Dropbox/EPSCoR_swat/'
