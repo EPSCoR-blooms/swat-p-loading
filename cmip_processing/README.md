@@ -5,7 +5,7 @@ This folder contains scripts to process the manually-downloaded CMIP LOCA climat
 
 * CMIP LOCA files are located in the Google Drive Folder 'Daily Weather (1976-2050)'; created by Lars Gundersen (lgunders@bates.edu)
 * Watershed shape files are located in the above folder as well. These are the SWAT-derived watersheds.
-* extracted .csvs of the CMIP files are currently stored in the [Dropbox folder 'EPSCoR_swat'](https://www.dropbox.com/sh/s0vr0ojhf7kt9hp/AABeHATrYE07CTvNhy3sOU1ta?dl=0); created by B. Steele (steeleb@caryinstitute.org/bsteele@bates.edu)
+* extracted .csvs of the CMIP files are currently stored in the [Dropbox folder 'EPSCoR_swat'](https://www.dropbox.com/sh/s0vr0ojhf7kt9hp/AABeHATrYE07CTvNhy3sOU1ta?dl=0); created by B. Steele (steeleb@caryinstitute.org/bsteele@bates.edu) and have also been zipped to the Drive folder location *Daily Weather (1976-2050)/extracted_files/uncollated_zip*
 
 
 ## Overarching Workflow
