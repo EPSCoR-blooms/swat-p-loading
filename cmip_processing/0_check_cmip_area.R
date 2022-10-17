@@ -22,31 +22,30 @@ dir.create(tmp_dir)
 drive_auth()
 # you'll need to manually type in your account in order to move forward with the script
 
+#point to shared drive
+sd_id <- shared_drive_find(pattern = 'EPSCoR_SWAT')$id
+
 #find the folder you're interested in 
-info <- drive_find(pattern = 'Daily Weather',type = 'folder')
+info <- drive_ls(path = as_id(sd_id), pattern = 'Daily Weather')
 print(info) #to confirm
 
-#store the id as did
-did <- info$id
-
+#store the id as fid
+fid <- info$id
 
 #grab the folder identity for the watershed shapefiles
-geo_fid <- drive_ls(as_id(did), pattern = 'Shape')$id
+geo_fid <- drive_ls(as_id(fid), pattern = 'Shape')$id
 
 #grab the folder identity for the finalized delineations
-folder_info <- drive_ls(as_id(did), pattern = 'Final')
+folder_info <- drive_ls(as_id(fid), pattern = 'Final')
 print(folder_info)
 #filter out the pending files
-fid <- (folder_info %>% filter(!grepl('Pending', name)))$id
-
-## GRAB UPLOAD LOCATION INFO ----
-upload_id = drive_ls(as_id(did), 'extracted')$id
+pid <- (folder_info %>% filter(!grepl('Pending', name)))$id
 
 ## GRAB THE METADATA FILE THAT CONTAINS THE LIST FOR PROCESSING ----
 # metadata file just has LakeName and LakeAbbreviation; this is just to help with iteration later.
 
 # get drive id
-meta_id <- drive_ls(as_id(did), pattern = 'Meta')$id
+meta_id <- drive_ls(as_id(fid), pattern = 'Meta')$id
 
 #save file locally
 drive_download(meta_id, 
@@ -484,6 +483,142 @@ tm_shape(r) +
   tm_graticules()
 
 tmap_save(filename = file.path('test', 'China_hydro.png'))
+
+# clean up 
+unlink(file.path('temp', hydro_list$name))
+rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
+
+
+## Cranberry ----
+shape_list <- SHAPE_LIST('Cranberry', 'cra')
+#download them from drive
+for(i in 1:nrow(shape_list)){
+  drive_download(shape_list$id[i], 
+                 path = file.path(tmp_dir, shape_list$name[i]),
+                 overwrite = T)
+}
+
+#create shape_name from metadata
+shape_name = 'cranberry.shp'
+
+# read in shp file and transform to WGS 84
+watershed <- st_read(file.path(tmp_dir, shape_name))
+
+watershed <- st_transform(watershed, 4326) #transform to WGS84
+
+#remove temp files/clean up
+unlink(file.path('temp', shape_list$name))
+rm(shape_list, shape_name)
+
+### grab loca climate files ----
+
+clim_fid <- COUNT_CLIM('Cranberry')
+
+clim_list <- CLIM_LIST('Cranberry', 1)
+
+#download them from drive
+drive_download(clim_list$id[1], 
+               path = file.path(tmp_dir, clim_list$name[1]),
+               overwrite = T)
+
+tempmax <- clim_list %>% filter(grepl('max', name))
+
+data_max <- nc_open(file.path(tmp_dir, tempmax$name))
+
+#get indices
+t <- ncvar_get(data_max, 'time')
+lat <- ncvar_get(data_max, 'lat')
+lon <- ncvar_get(data_max, 'lon')
+lon = lon - 360 #convert to degrees
+
+#get array
+maxtemp.array <- ncvar_get(data_max, 'tasmax')
+
+#get na value
+fillvalue <- ncatt_get(data_max, "tasmax", "_FillValue")
+
+# close netcdf
+nc_close(data_max)
+
+#recode na values
+maxtemp.array[maxtemp.array == fillvalue$value] <- NA
+
+#grab a slice and check
+maxtemp.slice <- maxtemp.array[, , 50, 5]
+
+r <- raster(t(maxtemp.slice), 
+            xmn=min(lon), 
+            xmx=max(lon), 
+            ymn=min(lat), 
+            ymx=max(lat),
+            crs='+init=EPSG:4326') # reported as WGS84 deg
+r <- flip(r, direction='y') #flip the coord for proper display
+
+#reality check
+tm_shape(r) +
+  tm_raster() +
+  tm_shape(watershed) +
+  tm_polygons() +
+  tm_scale_bar() +
+  tm_graticules()
+
+tmap_save(filename = file.path('test', 'Cranberry_clim.png'))
+
+# clean up 
+unlink(file.path('temp', clim_list$name))
+rm(clim_list, data_max, fillvalue, maxtemp.slice, r, tempmax, lat, lon, t, maxtemp.array)
+
+### grab loca hydro files ----
+
+hyd_fid <- COUNT_HYDRO('Cranberry')
+
+hydro_list <- HYDRO_LIST('Cranberry', 1)
+
+#download them from drive
+drive_download(hydro_list$id[3], 
+               path = file.path(tmp_dir, hydro_list$name[3]),
+               overwrite = T)
+
+
+rf <- nc_open(file.path(tmp_dir, hydro_list$name[3]))
+
+#get indices
+t <- ncvar_get(rf, 'Time')
+lat <- ncvar_get(rf, 'Lat')
+lon <- ncvar_get(rf, 'Lon')
+
+#get array
+rf.array <- ncvar_get(rf, 'rainfall')
+
+#get na value
+fillvalue <- ncatt_get(rf, "rainfall", "_FillValue")
+
+# close netcdf
+nc_close(rf)
+
+#recode na values
+rf.array[rf.array == fillvalue$value] <- NA
+
+#grab a slice and check
+rf.slice <- rf.array[, , 50, 5]
+
+r <- raster(t(rf.slice), 
+            xmn=min(lon), 
+            xmx=max(lon), 
+            ymn=min(lat), 
+            ymx=max(lat),
+            crs='+init=EPSG:4326') # reported as WGS84 deg
+r <- flip(r, direction='y') #flip the coord for proper display
+
+#reality check
+tm_shape(r) +
+  tm_raster() +
+  tm_shape(watershed) +
+  tm_polygons() +
+  tm_scale_bar() +
+  tm_graticules()
+
+tmap_save(filename = file.path('test', 'Cranberry_hydro.png'))
 
 # clean up 
 unlink(file.path('temp', hydro_list$name))
@@ -1312,6 +1447,144 @@ tm_shape(r) +
   tm_graticules()
 
 tmap_save(filename = file.path('test', 'Sabattus_hydro.png'))
+
+# clean up 
+unlink(file.path('temp', hydro_list$name))
+rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
+
+
+
+## Sebago ----
+shape_list <- SHAPE_LIST('Sebago', 'seb')
+#download them from drive
+for(i in 1:nrow(shape_list)){
+  drive_download(shape_list$id[i], 
+                 path = file.path(tmp_dir, shape_list$name[i]),
+                 overwrite = T)
+}
+
+#create shape_name from metadata
+shape_name = 'sebago.shp'
+
+# read in shp file and transform to WGS 84
+watershed <- st_read(file.path(tmp_dir, shape_name))
+
+watershed <- st_transform(watershed, 4326) #transform to WGS84
+
+#remove temp files/clean up
+unlink(file.path('temp', shape_list$name))
+rm(shape_list, shape_name)
+
+### grab loca climate files ----
+
+clim_fid <- COUNT_CLIM('Sebago')
+
+clim_list <- CLIM_LIST('Sebago', 1)
+
+
+#download them from drive
+drive_download(clim_list$id[1], 
+               path = file.path(tmp_dir, clim_list$name[1]),
+               overwrite = T)
+
+tempmax <- clim_list %>% filter(grepl('max', name))
+
+data_max <- nc_open(file.path(tmp_dir, tempmax$name))
+
+#get indices
+t <- ncvar_get(data_max, 'time')
+lat <- ncvar_get(data_max, 'lat')
+lon <- ncvar_get(data_max, 'lon')
+lon = lon - 360 #convert to degrees
+
+#get array
+maxtemp.array <- ncvar_get(data_max, 'tasmax')
+
+#get na value
+fillvalue <- ncatt_get(data_max, "tasmax", "_FillValue")
+
+# close netcdf
+nc_close(data_max)
+
+#recode na values
+maxtemp.array[maxtemp.array == fillvalue$value] <- NA
+
+#grab a slice and check
+maxtemp.slice <- maxtemp.array[, , 50, 5]
+
+r <- raster(t(maxtemp.slice), 
+            xmn=min(lon), 
+            xmx=max(lon), 
+            ymn=min(lat), 
+            ymx=max(lat),
+            crs='+init=EPSG:4326') # reported as WGS84 deg
+r <- flip(r, direction='y') #flip the coord for proper display
+
+#reality check
+tm_shape(r) +
+  tm_raster() +
+  tm_shape(watershed) +
+  tm_polygons() +
+  tm_scale_bar() +
+  tm_graticules()
+
+tmap_save(filename = file.path('test', 'Sebago_clim.png'))
+
+# clean up 
+unlink(file.path('temp', clim_list$name))
+rm(clim_list, data_max, fillvalue, maxtemp.slice, r, tempmax, lat, lon, t, maxtemp.array)
+
+### grab loca hydro files ----
+
+hyd_fid <- COUNT_HYDRO('Sebago')
+
+hydro_list <- HYDRO_LIST('Sebago', 1)
+
+#download them from drive
+drive_download(hydro_list$id[2], 
+               path = file.path(tmp_dir, hydro_list$name[2]),
+               overwrite = T)
+
+
+rf <- nc_open(file.path(tmp_dir, hydro_list$name[2]))
+
+#get indices
+t <- ncvar_get(rf, 'Time')
+lat <- ncvar_get(rf, 'Lat')
+lon <- ncvar_get(rf, 'Lon')
+
+#get array
+rf.array <- ncvar_get(rf, 'windspeed')
+
+#get na value
+fillvalue <- ncatt_get(rf, "windspeed", "_FillValue")
+
+# close netcdf
+nc_close(rf)
+
+#recode na values
+rf.array[rf.array == fillvalue$value] <- NA
+
+#grab a slice and check
+rf.slice <- rf.array[, , 50, 5]
+
+r <- raster(t(rf.slice), 
+            xmn=min(lon), 
+            xmx=max(lon), 
+            ymn=min(lat), 
+            ymx=max(lat),
+            crs='+init=EPSG:4326') # reported as WGS84 deg
+r <- flip(r, direction='y') #flip the coord for proper display
+
+#reality check
+tm_shape(r) +
+  tm_raster() +
+  tm_shape(watershed) +
+  tm_polygons() +
+  tm_scale_bar() +
+  tm_graticules()
+
+tmap_save(filename = file.path('test', 'Sebago_hydro.png'))
 
 # clean up 
 unlink(file.path('temp', hydro_list$name))
