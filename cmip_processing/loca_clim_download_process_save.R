@@ -3,7 +3,7 @@
 # grab loca climate files ----
 message('Starting CLIM extraction for ', lake_list$LakeName[l])
 
-dir.create('touplaod')
+dir.create('toupload')
 
 clim_fid <- COUNT_CLIM(lake_list$LakeName[l])
 

@@ -27,14 +27,16 @@ All scripts are meant to be run with the R Project file 'cmip_processing.Rproj' 
 
 *0_check_cmip_area.R*: this script checks to make sure your watershed files are functioning as they should and that the extent of your CMIP LOCA files are correct. This runs one climate file and one hydrology file and outputs a png in the 'test' folder within this repo. Run this before extracting CMIP files to check for errors. 
 
-*1_authorize_source.R*: this is the primary workhorse of this repo. This script sources a number of other scripts within the repo: grab_watershed.R, loca_clim_download_process_save.R, loca_hyd_download_process_save.R. Make sure you stop to double check the lakes you're going to extract in 'lake_list' before you start the loop that sources the following files.
+*1_authorize_source.R*: this is the primary workhorse of this repo. This script sources a number of other scripts within the repo: grab_watershed.R, loca_clim_download_process_save.R, loca_hyd_download_process_save.R, upload_cmip_to_drive.R. Make sure you stop to double check the lakes you're going to extract in 'lake_list' before you start the loop that sources the following files.
     
  - *grab_watershed.R*: like the name implies, this just grabs the watershed files from Google Drive for the CMIP extraction.
     
  - *loca_clim_download_process_save.R*: this script extracts the climate files and saves them to a user-specified folder. Currently this is the Dropbox folder listed above. This iterates by netcdf file and per projection.
     
  - *loca_hyd_download_process_save.R*: this script extracts the hydrology files and saves them to a user-specified folder. Currently this is the Dropbox folder listed above. This iterates by netcdf file and per projection.
-    
+ 
+ - *upload_cmip_to_drive.R*: this script takes the locally-saved files, uploads them to Drive, then removes the files stored locally.
+ 
 *2_collate_upload.R*: this script collates the extracted CMIP files from the user-specified folder and formats them into SWAT-friendly formats. 
 
 Sourced scripts:
