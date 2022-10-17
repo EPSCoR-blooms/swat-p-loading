@@ -22,9 +22,6 @@ library(tidync)
 tmp_dir = 'temp/'
 dir.create(tmp_dir)
 
-## point to local file path outside of GH to save extracted files ----
-save_dir <- 'C:/Users/steeleb/Dropbox/EPSCoR_swat/'
-
 ## navigate to Drive directories ----
 
 #authorize google drive
@@ -34,34 +31,37 @@ drive_auth()
 ## you'll need to manually type in your account in order to move forward with the script ##
 ####
 
-
+#point to shared drive
+sd_id <- shared_drive_find(pattern = 'EPSCoR_SWAT')$id
 
 #find the folder you're interested in 
-info <- drive_find(pattern = 'Daily Weather',type = 'folder')
+info <- drive_ls(path = as_id(sd_id), pattern = 'Daily Weather')
 print(info) #to confirm
 
-#store the id as did
-did <- info$id
-
+#store the id as fid
+fid <- info$id
 
 #grab the folder identity for the watershed shapefiles
-geo_fid <- drive_ls(as_id(did), pattern = 'Shape')$id
+geo_fid <- drive_ls(as_id(fid), pattern = 'Shape')$id
 
 #grab the folder identity for the finalized delineations
-folder_info <- drive_ls(as_id(did), pattern = 'Final')
+folder_info <- drive_ls(as_id(fid), pattern = 'Final')
 print(folder_info)
 #filter out the pending files
-fid <- (folder_info %>% filter(!grepl('Pending', name)))$id
+pid <- (folder_info %>% filter(!grepl('Pending', name)))$id
 
 ## grab upload file location ----
-upload_id = drive_ls(as_id(did), 'extracted')$id
+upload_id = drive_ls(as_id(fid), 'extracted')$id
+
+## grap intermediary save location ----
+inter_id <- drive_ls(as_id(did), 'intermediary')$id
 
 
 # GRAB THE METADATA FILE THAT CONTAINS THE LIST FOR PROCESSING ----
 # metadata file just has LakeName and LakeAbbreviation; this is just to help with iteration later.
 
 # get drive id
-meta_id <- drive_ls(as_id(did), pattern = 'Meta')$id
+meta_id <- drive_ls(as_id(fid), pattern = 'Meta')$id
 
 #save file locally
 drive_download(meta_id, 
@@ -100,8 +100,6 @@ if(nrow(complete >0)) {
 
 #remove local download
 unlink(file.path(tmp_dir, 'metadata.xlsx'))
-
-
 
 
 ## SOURCE FUNCTION SCRIPT ----
