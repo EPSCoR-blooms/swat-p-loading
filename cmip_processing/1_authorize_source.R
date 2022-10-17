@@ -111,9 +111,9 @@ for(l in 1:nrow(lake_list)) {
   source('grab_watershed.R')
   source('loca_clim_download_process_save.R')
   source('loca_hyd_download_process_save.R')
+  source('upload_cmip_to_drive.R')
 }
 
-# source('collate_upload.R')
 
 ## TIDY UP ----
 

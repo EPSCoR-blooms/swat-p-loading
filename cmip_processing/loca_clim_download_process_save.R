@@ -3,6 +3,8 @@
 # grab loca climate files ----
 message('Starting CLIM extraction for ', lake_list$LakeName[l])
 
+dir.create('touplaod')
+
 clim_fid <- COUNT_CLIM(lake_list$LakeName[l])
 
 if(length(clim_fid) == 1) {
@@ -112,11 +114,13 @@ for(n in 1:length(netcdf_file)) {
 
     #write file, will make pretty later
     filename = paste0(lake_list$LakeName[l], '_loca_clim_', 'nc', n, '_', 'p', clim_proj[p], '_', Sys.Date(), '.csv')
-    write.csv(extract_all, file.path(save_dir, filename), row.names = F)
+    write.csv(extract_all, file.path('toupload', filename), row.names = F)
     message('Projection saved locally as ', filename)
     
   }
 }
+
+
 
 #remove net cdf files from tmp dir
 unlink(file.path(tmp_dir, netcdf_file))
