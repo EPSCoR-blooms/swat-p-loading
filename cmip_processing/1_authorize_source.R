@@ -50,11 +50,8 @@ print(folder_info)
 #filter out the pending files
 pid <- (folder_info %>% filter(!grepl('Pending', name)))$id
 
-## grab upload file location ----
-upload_id = drive_ls(as_id(fid), 'extracted')$id
-
 ## grap intermediary save location ----
-inter_id <- drive_ls(as_id(did), 'intermediary')$id
+inter_id <- drive_ls(as_id(sd_id), 'intermediary')$id
 
 
 # GRAB THE METADATA FILE THAT CONTAINS THE LIST FOR PROCESSING ----
