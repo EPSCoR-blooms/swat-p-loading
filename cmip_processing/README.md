@@ -37,7 +37,12 @@ All scripts are meant to be run with the R Project file 'cmip_processing.Rproj' 
  
  - *upload_cmip_to_drive.R*: this script takes the locally-saved files, uploads them to Drive, then removes the files stored locally.
  
-*2_collate_upload.R*: this script collates the extracted CMIP files from the user-specified folder and formats them into SWAT-friendly formats. 
+*2_collate_upload.R*: this script collates the extracted CMIP files from the user-specified folder and formats them into SWAT-friendly formats. It sources the following scripts to complete this task:
+
+ - *download_from_drive.R*: this script downloads the intermediary files from the Shared Drive to a local place for collation
+ 
+ - *collate_PARAMETER.R*: these scripts collate the parameter listed in the title of the file.
+ 
 
 Sourced scripts:
     
