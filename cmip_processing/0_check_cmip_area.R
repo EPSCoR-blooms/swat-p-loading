@@ -13,7 +13,7 @@ library(tmap) #for sanity checks
 # library(tidync)
 
 # create temporary and export folders for Drive downloads/uploads ----
-tmp_dir = 'temp/'
+tmp_dir = 'temp2/'
 dir.create(tmp_dir)
 
 # navigate to Drive directories ----
@@ -97,7 +97,7 @@ watershed <- st_read(file.path(tmp_dir, shape_name))
 watershed <- st_transform(watershed, 4326) #transform to WGS84
 
 #remove temp files/clean up
-unlink(file.path('temp', shape_list$name))
+unlink(file.path('temp2', shape_list$name))
 rm(shape_list, shape_name)
 
 ### grab loca climate files ----
@@ -155,7 +155,7 @@ tm_shape(r) +
 tmap_save(filename = file.path('test', 'Auburn_clim.png'))
 
 # clean up 
-unlink(file.path('temp', clim_list$name))
+unlink(file.path('temp2', clim_list$name))
 rm(clim_list, data_max, fillvalue, maxtemp.slice, r, tempmax, lat, lon, t, maxtemp.array)
 
 ### grab loca hydro files ----
@@ -211,7 +211,7 @@ tm_shape(r) +
 tmap_save(filename = file.path('test', 'Auburn_hydro.png'))
 
 # clean up 
-unlink(file.path('temp', hydro_list$name))
+unlink(file.path('temp2', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
 
@@ -234,7 +234,7 @@ watershed <- st_read(file.path(tmp_dir, shape_name))
 watershed <- st_transform(watershed, 4326) #transform to WGS84
 
 #remove temp files/clean up
-unlink(file.path('temp', shape_list$name))
+unlink(file.path('temp2', shape_list$name))
 rm(shape_list, shape_name)
 
 ### grab loca climate files ----
@@ -292,7 +292,7 @@ tm_shape(r) +
 tmap_save(filename = file.path('test', 'Barber_clim.png'))
 
 # clean up 
-unlink(file.path('temp', clim_list$name))
+unlink(file.path('temp2', clim_list$name))
 rm(clim_list, data_max, fillvalue, maxtemp.slice, r, tempmax, lat, lon, t, maxtemp.array)
 
 ### grab loca hydro files ----
@@ -348,7 +348,7 @@ tm_shape(r) +
 tmap_save(filename = file.path('test', 'Barber_hydro.png'))
 
 # clean up 
-unlink(file.path('temp', hydro_list$name))
+unlink(file.path('temp2', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
 
@@ -371,7 +371,7 @@ watershed <- st_read(file.path(tmp_dir, shape_name))
 watershed <- st_transform(watershed, 4326) #transform to WGS84
 
 #remove temp files/clean up
-unlink(file.path('temp', shape_list$name))
+unlink(file.path('temp2', shape_list$name))
 rm(shape_list, shape_name)
 
 ### grab loca climate files ----
@@ -429,7 +429,7 @@ tm_shape(r) +
 tmap_save(filename = file.path('test', 'china_clim.png'))
 
 # clean up 
-unlink(file.path('temp', clim_list$name))
+unlink(file.path('temp2', clim_list$name))
 rm(clim_list, data_max, fillvalue, maxtemp.slice, r, tempmax, lat, lon, t, maxtemp.array)
 
 ### grab loca hydro files ----
@@ -485,7 +485,7 @@ tm_shape(r) +
 tmap_save(filename = file.path('test', 'China_hydro.png'))
 
 # clean up 
-unlink(file.path('temp', hydro_list$name))
+unlink(file.path('temp2', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
 
@@ -507,7 +507,7 @@ watershed <- st_read(file.path(tmp_dir, shape_name))
 watershed <- st_transform(watershed, 4326) #transform to WGS84
 
 #remove temp files/clean up
-unlink(file.path('temp', shape_list$name))
+unlink(file.path('temp2', shape_list$name))
 rm(shape_list, shape_name)
 
 ### grab loca climate files ----
@@ -565,7 +565,7 @@ tm_shape(r) +
 tmap_save(filename = file.path('test', 'Cranberry_clim.png'))
 
 # clean up 
-unlink(file.path('temp', clim_list$name))
+unlink(file.path('temp2', clim_list$name))
 rm(clim_list, data_max, fillvalue, maxtemp.slice, r, tempmax, lat, lon, t, maxtemp.array)
 
 ### grab loca hydro files ----
@@ -621,7 +621,7 @@ tm_shape(r) +
 tmap_save(filename = file.path('test', 'Cranberry_hydro.png'))
 
 # clean up 
-unlink(file.path('temp', hydro_list$name))
+unlink(file.path('temp2', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
 
@@ -644,7 +644,7 @@ watershed <- st_read(file.path(tmp_dir, shape_name))
 watershed <- st_transform(watershed, 4326) #transform to WGS84
 
 #remove temp files/clean up
-unlink(file.path('temp', shape_list$name))
+unlink(file.path('temp2', shape_list$name))
 rm(shape_list, shape_name)
 
 ### grab loca climate files ----
@@ -702,7 +702,7 @@ tm_shape(r) +
 tmap_save(filename = file.path('test', 'Floods_clim.png'))
 
 # clean up 
-unlink(file.path('temp', clim_list$name))
+unlink(file.path('temp2', clim_list$name))
 rm(clim_list, data_max, fillvalue, maxtemp.slice, r, tempmax, lat, lon, t, maxtemp.array)
 
 ### grab loca hydro files ----
@@ -758,7 +758,7 @@ tm_shape(r) +
 tmap_save(filename = file.path('test', 'Floods_hydro.png'))
 
 # clean up 
-unlink(file.path('temp', hydro_list$name))
+unlink(file.path('temp2', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
 
@@ -782,7 +782,7 @@ watershed <- st_read(file.path(tmp_dir, shape_name))
 watershed <- st_transform(watershed, 4326) #transform to WGS84
 
 #remove temp files/clean up
-unlink(file.path('temp', shape_list$name))
+unlink(file.path('temp2', shape_list$name))
 rm(shape_list, shape_name)
 
 ### grab loca climate files ----
@@ -840,7 +840,7 @@ tm_shape(r) +
 tmap_save(filename = file.path('test', 'Great_clim.png'))
 
 # clean up 
-unlink(file.path('temp', clim_list$name))
+unlink(file.path('temp2', clim_list$name))
 rm(clim_list, data_max, fillvalue, maxtemp.slice, r, tempmax, lat, lon, t, maxtemp.array)
 
 ### grab loca hydro files ----
@@ -896,7 +896,7 @@ tm_shape(r) +
 tmap_save(filename = file.path('test', 'Great_hydro.png'))
 
 # clean up 
-unlink(file.path('temp', hydro_list$name))
+unlink(file.path('temp2', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
 
@@ -920,7 +920,7 @@ watershed <- st_read(file.path(tmp_dir, shape_name))
 watershed <- st_transform(watershed, 4326) #transform to WGS84
 
 #remove temp files/clean up
-unlink(file.path('temp', shape_list$name))
+unlink(file.path('temp2', shape_list$name))
 rm(shape_list, shape_name)
 
 ### grab loca climate files ----
@@ -978,7 +978,7 @@ tm_shape(r) +
 tmap_save(filename = file.path('test', 'Hadlock_clim.png'))
 
 # clean up 
-unlink(file.path('temp', clim_list$name))
+unlink(file.path('temp2', clim_list$name))
 rm(clim_list, data_max, fillvalue, maxtemp.slice, r, tempmax, lat, lon, t, maxtemp.array)
 
 ### grab loca hydro files ----
@@ -1034,7 +1034,7 @@ tm_shape(r) +
 tmap_save(filename = file.path('test', 'Hadlock_hydro.png'))
 
 # clean up 
-unlink(file.path('temp', hydro_list$name))
+unlink(file.path('temp2', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
 
@@ -1058,7 +1058,7 @@ watershed <- st_read(file.path(tmp_dir, shape_name))
 watershed <- st_transform(watershed, 4326) #transform to WGS84
 
 #remove temp files/clean up
-unlink(file.path('temp', shape_list$name))
+unlink(file.path('temp2', shape_list$name))
 rm(shape_list, shape_name)
 
 ### grab loca climate files ----
@@ -1116,7 +1116,7 @@ tm_shape(r) +
 tmap_save(filename = file.path('test', 'Jordan_clim.png'))
 
 # clean up 
-unlink(file.path('temp', clim_list$name))
+unlink(file.path('temp2', clim_list$name))
 rm(clim_list, data_max, fillvalue, maxtemp.slice, r, tempmax, lat, lon, t, maxtemp.array)
 
 ### grab loca hydro files ----
@@ -1172,7 +1172,7 @@ tm_shape(r) +
 tmap_save(filename = file.path('test', 'Jordan_hydro.png'))
 
 # clean up 
-unlink(file.path('temp', hydro_list$name))
+unlink(file.path('temp2', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
 
@@ -1196,7 +1196,7 @@ watershed <- st_read(file.path(tmp_dir, shape_name))
 watershed <- st_transform(watershed, 4326) #transform to WGS84
 
 #remove temp files/clean up
-unlink(file.path('temp', shape_list$name))
+unlink(file.path('temp2', shape_list$name))
 rm(shape_list, shape_name)
 
 ### grab loca climate files ----
@@ -1254,7 +1254,7 @@ tm_shape(r) +
 tmap_save(filename = file.path('test', 'Rangeley_clim.png'))
 
 # clean up 
-unlink(file.path('temp', clim_list$name))
+unlink(file.path('temp2', clim_list$name))
 rm(clim_list, data_max, fillvalue, maxtemp.slice, r, tempmax, lat, lon, t, maxtemp.array)
 
 ### grab loca hydro files ----
@@ -1310,7 +1310,7 @@ tm_shape(r) +
 tmap_save(filename = file.path('test', 'Rangeley_hydro.png'))
 
 # clean up 
-unlink(file.path('temp', hydro_list$name))
+unlink(file.path('temp2', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
 
@@ -1334,7 +1334,7 @@ watershed <- st_read(file.path(tmp_dir, shape_name))
 watershed <- st_transform(watershed, 4326) #transform to WGS84
 
 #remove temp files/clean up
-unlink(file.path('temp', shape_list$name))
+unlink(file.path('temp2', shape_list$name))
 rm(shape_list, shape_name)
 
 ### grab loca climate files ----
@@ -1393,7 +1393,7 @@ tm_shape(r) +
 tmap_save(filename = file.path('test', 'Sabattus_clim.png'))
 
 # clean up 
-unlink(file.path('temp', clim_list$name))
+unlink(file.path('temp2', clim_list$name))
 rm(clim_list, data_max, fillvalue, maxtemp.slice, r, tempmax, lat, lon, t, maxtemp.array)
 
 ### grab loca hydro files ----
@@ -1449,7 +1449,7 @@ tm_shape(r) +
 tmap_save(filename = file.path('test', 'Sabattus_hydro.png'))
 
 # clean up 
-unlink(file.path('temp', hydro_list$name))
+unlink(file.path('temp2', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
 
@@ -1472,7 +1472,7 @@ watershed <- st_read(file.path(tmp_dir, shape_name))
 watershed <- st_transform(watershed, 4326) #transform to WGS84
 
 #remove temp files/clean up
-unlink(file.path('temp', shape_list$name))
+unlink(file.path('temp2', shape_list$name))
 rm(shape_list, shape_name)
 
 ### grab loca climate files ----
@@ -1531,7 +1531,7 @@ tm_shape(r) +
 tmap_save(filename = file.path('test', 'Sebago_clim.png'))
 
 # clean up 
-unlink(file.path('temp', clim_list$name))
+unlink(file.path('temp2', clim_list$name))
 rm(clim_list, data_max, fillvalue, maxtemp.slice, r, tempmax, lat, lon, t, maxtemp.array)
 
 ### grab loca hydro files ----
@@ -1587,7 +1587,7 @@ tm_shape(r) +
 tmap_save(filename = file.path('test', 'Sebago_hydro.png'))
 
 # clean up 
-unlink(file.path('temp', hydro_list$name))
+unlink(file.path('temp2', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
 
@@ -1611,7 +1611,7 @@ watershed <- st_read(file.path(tmp_dir, shape_name))
 watershed <- st_transform(watershed, 4326) #transform to WGS84
 
 #remove temp files/clean up
-unlink(file.path('temp', shape_list$name))
+unlink(file.path('temp2', shape_list$name))
 rm(shape_list, shape_name)
 
 ### grab loca climate files ----
@@ -1670,7 +1670,7 @@ tm_shape(r) +
 tmap_save(filename = file.path('test', 'Sunapee_clim.png'))
 
 # clean up 
-unlink(file.path('temp', clim_list$name))
+unlink(file.path('temp2', clim_list$name))
 rm(clim_list, data_max, fillvalue, maxtemp.slice, r, tempmax, lat, lon, t, maxtemp.array)
 
 ### grab loca hydro files ----
@@ -1726,7 +1726,7 @@ tm_shape(r) +
 tmap_save(filename = file.path('test', 'Sunapee_hydro.png'))
 
 # clean up 
-unlink(file.path('temp', hydro_list$name))
+unlink(file.path('temp2', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
 
@@ -1750,7 +1750,7 @@ watershed <- st_read(file.path(tmp_dir, shape_name))
 watershed <- st_transform(watershed, 4326) #transform to WGS84
 
 #remove temp files/clean up
-unlink(file.path('temp', shape_list$name))
+unlink(file.path('temp2', shape_list$name))
 rm(shape_list, shape_name)
 
 ### grab loca climate files ----
@@ -1809,7 +1809,7 @@ tm_shape(r) +
 tmap_save(filename = file.path('test', 'Yawgoo_clim.png'))
 
 # clean up 
-unlink(file.path('temp', clim_list$name))
+unlink(file.path('temp2', clim_list$name))
 rm(clim_list, data_max, fillvalue, maxtemp.slice, r, tempmax, lat, lon, t, maxtemp.array)
 
 ### grab loca hydro files ----
@@ -1865,9 +1865,11 @@ tm_shape(r) +
 tmap_save(filename = file.path('test', 'Yawgoo_hydro.png'))
 
 # clean up 
-unlink(file.path('temp', hydro_list$name))
+unlink(file.path('temp2', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
+## clean up ----
+unlink('temp2', recursive = T)
   
 
   
