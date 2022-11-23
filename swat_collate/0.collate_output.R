@@ -43,7 +43,7 @@ lakes
 
 
 #for monthly files
-for(l in 11:length(lakes)){
+for(l in 1:length(lakes)){
   output = NULL
   #get list of years in lake folder
   years = list.files(file.path(dir, lakes[l]))
