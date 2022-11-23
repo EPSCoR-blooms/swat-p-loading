@@ -43,7 +43,8 @@ lakes
 
 
 #for monthly files
-for(l in 1:length(lakes)){
+for(l in 11:length(lakes)){
+  output = NULL
   #get list of years in lake folder
   years = list.files(file.path(dir, lakes[l]))
   for(y in 1:length(years)){
@@ -75,15 +76,19 @@ for(l in 1:length(lakes)){
       }
     }
   }
-  output = output %>% 
-    mutate(rcp = substr(climatemodel, nchar(climatemodel)-2, nchar(climatemodel)),
-           climatemodel = substr(climatemodel, 1, nchar(climatemodel)-3))
-  writename = paste0(lakes[l], '_basin_res_mon_collate.csv')
-  write.csv(output, file.path(dump, writename), row.names = F)
+  if(!is.null(nrow(output))){
+    output = output %>% 
+      mutate(rcp = substr(climatemodel, nchar(climatemodel)-2, nchar(climatemodel)),
+             climatemodel = substr(climatemodel, 1, nchar(climatemodel)-3))
+    writename = paste0(lakes[l], '_basin_res_mon_collate.csv')
+    write.csv(output, file.path(dump, writename), row.names = F)
+    rm(output)
+  }
 }
 
 #for annual files
 for(l in 1:length(lakes)){
+  output = NULL
   #get list of years in lake folder
   years = list.files(file.path(dir, lakes[l]))
   for(y in 1:length(years)){
@@ -115,9 +120,12 @@ for(l in 1:length(lakes)){
       }
     }
   }
-  output = output %>% 
-    mutate(rcp = substr(climatemodel, nchar(climatemodel)-2, nchar(climatemodel)),
-           climatemodel = substr(climatemodel, 1, nchar(climatemodel)-3))
-  writename = paste0(lakes[l], '_basin_res_yr_collate.csv')
-  write.csv(output, file.path(dump, writename), row.names = F)
+  if(!is.null(nrow(output))){
+    output = output %>% 
+      mutate(rcp = substr(climatemodel, nchar(climatemodel)-2, nchar(climatemodel)),
+             climatemodel = substr(climatemodel, 1, nchar(climatemodel)-3))
+    writename = paste0(lakes[l], '_basin_res_mon_collate.csv')
+    write.csv(output, file.path(dump, writename), row.names = F)
+    rm(output)
+  }
 }
