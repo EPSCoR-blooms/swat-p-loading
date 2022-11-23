@@ -42,7 +42,7 @@ lakes = lakes[!grepl('.docx', lakes)]
 lakes
 
 
-#for montly files
+#for monthly files
 for(l in 1:length(lakes)){
   #get list of years in lake folder
   years = list.files(file.path(dir, lakes[l]))
