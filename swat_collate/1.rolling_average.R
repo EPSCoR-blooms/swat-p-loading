@@ -96,4 +96,87 @@ for(f in 1:length(yr_collated)){
   }
   write.csv(allmodyears_rolled, file.path(dump, paste0(file$lake[1], '_3yr_rolling_res_yr.csv')), row.names = F)
 }
+
+# 5 year rolling
+for(f in 1:length(yr_collated)){
+  file = read_file(yr_collated[f])
+  mod_list = getmodels(file)
+  for(m in 1:length(mod_list)){
+    one_model = subset_mod(file, mod_list[m])
+    years = getyears(one_model)
+    for(y in 1:length(years)){
+      one_model_year = subset_modyr(one_model, years[y])
+      for(c in 2:length(columns)){
+        yrs = rollmean(one_model_year[,columns[1]], 5)
+        val = rollmean(one_model_year[,columns[c]], 5)
+        df = data.frame(yrs, val)
+        df$par = columns[c]
+        if(c == 2){
+          allrolled = df
+        } else {
+          allrolled = full_join(allrolled, df)
+        }
+      }
+      allrolled$landcover_year = years[y]
+      allrolled$modelrcp = mod_list[m]
+      allrolled$lake = file$lake[1]
+      allrolled_h = allrolled %>% 
+        pivot_wider(names_from = 'par',
+                    values_from = 'val',
+                    names_glue = '{par}_5y')
+      if(y == 1){
+        allyears_rolled = allrolled_h
+      } else {
+        allyears_rolled = full_join(allyears_rolled, allrolled_h)
+      }
+    }
+    if(m == 1) {
+      allmodyears_rolled = allyears_rolled
+    } else {
+      allmodyears_rolled = full_join(allmodyears_rolled, allyears_rolled)
+    }
+  }
+  write.csv(allmodyears_rolled, file.path(dump, paste0(file$lake[1], '_5yr_rolling_res_yr.csv')), row.names = F)
+}
       
+# 10 year rolling
+for(f in 1:length(yr_collated)){
+  file = read_file(yr_collated[f])
+  mod_list = getmodels(file)
+  for(m in 1:length(mod_list)){
+    one_model = subset_mod(file, mod_list[m])
+    years = getyears(one_model)
+    for(y in 1:length(years)){
+      one_model_year = subset_modyr(one_model, years[y])
+      for(c in 2:length(columns)){
+        yrs = rollmean(one_model_year[,columns[1]], 10)
+        val = rollmean(one_model_year[,columns[c]], 10)
+        df = data.frame(yrs, val)
+        df$par = columns[c]
+        if(c == 2){
+          allrolled = df
+        } else {
+          allrolled = full_join(allrolled, df)
+        }
+      }
+      allrolled$landcover_year = years[y]
+      allrolled$modelrcp = mod_list[m]
+      allrolled$lake = file$lake[1]
+      allrolled_h = allrolled %>% 
+        pivot_wider(names_from = 'par',
+                    values_from = 'val',
+                    names_glue = '{par}_10y')
+      if(y == 1){
+        allyears_rolled = allrolled_h
+      } else {
+        allyears_rolled = full_join(allyears_rolled, allrolled_h)
+      }
+    }
+    if(m == 1) {
+      allmodyears_rolled = allyears_rolled
+    } else {
+      allmodyears_rolled = full_join(allmodyears_rolled, allyears_rolled)
+    }
+  }
+  write.csv(allmodyears_rolled, file.path(dump, paste0(file$lake[1], '_10yr_rolling_res_yr.csv')), row.names = F)
+}
