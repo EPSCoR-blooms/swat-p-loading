@@ -32,7 +32,7 @@ csv_files %>%
   split(csv_files$id) %>% 
   walk(~drive_download(.$id, path = file.path("tmp", .$name), overwrite = TRUE))
 
-#downloads all collated files
+#reads in all collated files
 swat_collatedAnnual <- list.files(path="tmp/", pattern = "yr_collate", full.names = T) %>% 
   lapply(read.csv) %>% 
   bind_rows()
@@ -48,7 +48,7 @@ swat_collatedAnnual$climatemodel <- as.factor(swat_collatedAnnual$climatemodel)
 swat_collatedAnnual$landcover_year <- as.factor(swat_collatedAnnual$landcover_year)
 swat_collatedAnnual$lake <- as.factor(swat_collatedAnnual$lake)
 
-# plotting function for any SWAT output by climate model
+# plotting function to show sediment P in by year, coded by climatemodel and wrapped by climatemodel
 
 output_by_climatemodel <- function(data, lakeName, rcpDes, landcover_yr, output){ 
   
@@ -68,9 +68,9 @@ output_by_climatemodel <- function(data, lakeName, rcpDes, landcover_yr, output)
   return(climatemodel_plot)
 }
 
-# plotting function climate model by rcp and landcover_year
+# plotting function to show sediment P in by year, coded by climatemodel and wrapped by rcp and landcover_year
 
-output_by_climatemodel_rcp_landcoveryr <- function(data, lakeName, output){ 
+output_by_rcp_landcover_year <- function(data, lakeName, output){ 
   
   climatemodel_data <- data %>% 
     filter(lake == lakeName)
@@ -86,9 +86,9 @@ output_by_climatemodel_rcp_landcoveryr <- function(data, lakeName, output){
   return(climatemodel_plot)
 }
 
-# plotting function to show rcp and climate model by landcover year
+# plotting function to show sediment P in by year, coded by rcp and wrapped by landcover_year
 
-output_rcp_bylandcoveryear <- function(data, lakeName, climmod, output){ 
+output_bylandcoveryear <- function(data, lakeName, climmod, output){ 
   
   climatemodel_data <- data %>% 
     filter(lake == lakeName) %>% 
@@ -105,9 +105,9 @@ output_rcp_bylandcoveryear <- function(data, lakeName, climmod, output){
   return(climatemodel_plot)
 }
 
-# plotting function to show sediment P in by year, coded by landcover_year
+# plotting function to show sediment P in by year, coded by landcover_year and wrapped by rcp
 
-output_landcoveryear_byrcp <- function(data, lakeName, climmod, output){ 
+output_byrcp <- function(data, lakeName, climmod, output){ 
   
   climatemodel_data <- data %>% 
     filter(lake == lakeName) %>% 
@@ -124,43 +124,23 @@ output_landcoveryear_byrcp <- function(data, lakeName, climmod, output){
   return(climatemodel_plot)
 }
 
-swatAuburn_collatedAnnual %>% 
-  ggplot() +
-  geom_point(data = swatAuburn_collatedAnnual, aes(x = yr, y = sedp_in_kgP, color = landcover_year), alpha = 0.5) +
-  stat_smooth(data = swatAuburn_collatedAnnual, aes(x = yr, y = sedp_in_kgP, color = landcover_year, fill = landcover_year), method = "loess", formula = y ~ x) +
-  theme_minimal() +
-  xlab("Year") +
-  ylab("Sediment P In (kg/P)")
+# plotting function to show sediment P in by year, coded by rcp and wrapped by climatemodel
 
-swatAuburn_collatedAnnual %>% 
-  ggplot() +
-  geom_point(data = swatAuburn_collatedAnnual, aes(x = yr, y = sedp_in_kgP, color = rcp), alpha = 0.5) +
-  stat_smooth(data = swatAuburn_collatedAnnual, aes(x = yr, y = sedp_in_kgP, color = rcp, fill = rcp), method = "loess", formula = y ~ x) +
-  theme_minimal() +
-  xlab("Year") +
-  ylab("Sediment P In (kg/P)") +
-  facet_wrap(~climatemodel)
-
-# collated rolling average 3, 5, and 10 yr data
-
-tmpdir = 'tmp' #point to directories
-
-if(!dir.exists(tmpdir)){dir.create(tmpdir)} #create temporary directory - this creates a directory in your working directory called ‘tmp’
-
-drive_auth() # authorize googledrive to access your Google Drive -- follow browser instructions or the prompts in the console.
-
-did = shared_drive_find('EPSCoR_SWAT')$id #find shared drive id
-
-folder1_id = drive_ls(path = as_id(did), pattern = 'SWAT_collatedFiles')$id
-
-folder2_id = drive_ls(path = as_id(folder1_id), pattern = 'rollingave')$id #get folder id
-
-csv_files <- drive_ls(folder2_id, type = "csv")
-
-#downloads all files in the "collated" folder into temporary folder in R
-csv_files %>% 
-  split(csv_files$id) %>% 
-  walk(~drive_download(.$id, path = file.path("tmp", .$name), overwrite = TRUE))
+output_by_climatemodel_rcp <- function(data, lakeName, output){ 
+  
+  climatemodel_data <- data %>% 
+    filter(lake == lakeName)
+  
+  climatemodel_plot <- ggplot() +
+    geom_point(data = climatemodel_data, aes(x = yr, y = {{output}}, color = rcp, 
+                                             shape = rcp), alpha = 0.5) +
+    stat_smooth(data = climatemodel_data, aes(x = yr, y = {{output}}, color = rcp,
+                                              fill = rcp), method = "loess", formula = y ~ x) +
+    theme_minimal() +
+    facet_wrap(~climatemodel)
+  
+  return(climatemodel_plot)
+}
 
 # DELETE TMP FOLDER ----
 unlink(tmpdir, recursive = T)
