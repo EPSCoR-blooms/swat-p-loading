@@ -26,20 +26,20 @@ drive_auth()
 sd_id <- shared_drive_find(pattern = 'EPSCoR_SWAT')$id
 
 #find the folder you're interested in 
-info <- drive_ls(path = as_id(sd_id), pattern = 'Daily Weather')
+info <- drive_ls(path = as_id(sd_id), pattern = '2100')
 print(info) #to confirm
 
 #store the id as fid
 fid <- info$id
 
 #grab the folder identity for the watershed shapefiles
-geo_fid <- drive_ls(as_id(fid), pattern = 'Shape')$id
+geo_fid <- drive_ls(as_id(sd_id), pattern = 'Shape')$id
 
 #grab the folder identity for the finalized delineations
 folder_info <- drive_ls(as_id(fid), pattern = 'Final')
 print(folder_info)
 #filter out the pending files
-pid <- (folder_info %>% filter(!grepl('Pending', name)))$id
+lid <- folder_info$id
 
 ## GRAB THE METADATA FILE THAT CONTAINS THE LIST FOR PROCESSING ----
 # metadata file just has LakeName and LakeAbbreviation; this is just to help with iteration later.
@@ -53,21 +53,15 @@ drive_download(meta_id,
 
 #get list of sheets
 sheets <- excel_sheets(file.path(tmp_dir, 'metadata.xlsx'))
-#remove future sheets
-sheets <- sheets[! grepl('complete', sheets)]
 
-for(i in 1:length(sheets)) {
+read_sheet = function(sh){
   lake_list <- read_xlsx(file.path(tmp_dir, 'metadata.xlsx'),
-                         sheet = sheets[i]) 
-  lake_list$sheet = sheets[i]
-  if(i == 1) {
-    alllakes <- lake_list
-  } else {
-    alllakes <- full_join(alllakes, lake_list)
-  }
+                         sheet = sh) 
+  lake_list$sheet = sh
+  lake_list
 }
 
-rm(lake_list)
+all_lakes = map_dfr(sheets, read_sheet)
 
 #remove local download
 unlink(file.path(tmp_dir, 'metadata.xlsx'))
@@ -76,17 +70,20 @@ unlink(file.path(tmp_dir, 'metadata.xlsx'))
 ## SOURCE FUNCTION SCRIPT ----
 source('cmip_functions.R')
 
+all_lakes$LakeName
 
-alllakes$LakeName
+#download them from drive
+dr_down = function(sh_id, sh_name){
+  drive_download(sh_id,
+                 path = file.path(tmp_dir, sh_name),
+                                  overwrite = T)
+}
+
 
 ## Auburn ----
+#get shape list and download files locally
 shape_list <- SHAPE_LIST('Auburn', 'aub')
-#download them from drive
-for(i in 1:nrow(shape_list)){
-  drive_download(shape_list$id[i], 
-                 path = file.path(tmp_dir, shape_list$name[i]),
-                 overwrite = T)
-}
+map2(shape_list$id, shape_list$name, dr_down)
 
 #create shape_name from metadata
 shape_name = 'auburn.shp'
@@ -218,12 +215,7 @@ rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
 ## Barber ----
 shape_list <- SHAPE_LIST('Barber', 'bar')
-#download them from drive
-for(i in 1:nrow(shape_list)){
-  drive_download(shape_list$id[i], 
-                 path = file.path(tmp_dir, shape_list$name[i]),
-                 overwrite = T)
-}
+map2(shape_list$id, shape_list$name, dr_down)
 
 #create shape_name from metadata
 shape_name = 'barber.shp'
@@ -315,10 +307,10 @@ lat <- ncvar_get(rf, 'Lat')
 lon <- ncvar_get(rf, 'Lon')
 
 #get array
-rf.array <- ncvar_get(rf, 'rainfall')
+rf.array <- ncvar_get(rf, 'windspeed')
 
 #get na value
-fillvalue <- ncatt_get(rf, "rainfall", "_FillValue")
+fillvalue <- ncatt_get(rf, "windspeed", "_FillValue")
 
 # close netcdf
 nc_close(rf)
@@ -355,12 +347,7 @@ rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
 ## China ----
 shape_list <- SHAPE_LIST('China', 'chi')
-#download them from drive
-for(i in 1:nrow(shape_list)){
-  drive_download(shape_list$id[i], 
-                 path = file.path(tmp_dir, shape_list$name[i]),
-                 overwrite = T)
-}
+map2(shape_list$id, shape_list$name, dr_down)
 
 #create shape_name from metadata
 shape_name = 'china.shp'
@@ -489,14 +476,12 @@ unlink(file.path('temp2', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
 
+
+
 ## Cranberry ----
 shape_list <- SHAPE_LIST('Cranberry', 'cra')
 #download them from drive
-for(i in 1:nrow(shape_list)){
-  drive_download(shape_list$id[i], 
-                 path = file.path(tmp_dir, shape_list$name[i]),
-                 overwrite = T)
-}
+map2(shape_list$id, shape_list$name, dr_down)
 
 #create shape_name from metadata
 shape_name = 'cranberry.shp'
@@ -588,10 +573,10 @@ lat <- ncvar_get(rf, 'Lat')
 lon <- ncvar_get(rf, 'Lon')
 
 #get array
-rf.array <- ncvar_get(rf, 'rainfall')
+rf.array <- ncvar_get(rf, 'precip')
 
 #get na value
-fillvalue <- ncatt_get(rf, "rainfall", "_FillValue")
+fillvalue <- ncatt_get(rf, "precip", "_FillValue")
 
 # close netcdf
 nc_close(rf)
@@ -624,16 +609,14 @@ tmap_save(filename = file.path('test', 'Cranberry_hydro.png'))
 unlink(file.path('temp2', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
+gc()
+
 
 
 ## Floods ----
 shape_list <- SHAPE_LIST('Floods', 'fld')
 #download them from drive
-for(i in 1:nrow(shape_list)){
-  drive_download(shape_list$id[i], 
-                 path = file.path(tmp_dir, shape_list$name[i]),
-                 overwrite = T)
-}
+map2(shape_list$id, shape_list$name, dr_down)
 
 #create shape_name from metadata
 shape_name = 'floods.shp'
@@ -712,12 +695,12 @@ hyd_fid <- COUNT_HYDRO('Floods')
 hydro_list <- HYDRO_LIST('Floods', 1)
 
 #download them from drive
-drive_download(hydro_list$id[4], 
-               path = file.path(tmp_dir, hydro_list$name[4]),
+drive_download(hydro_list$id[3], 
+               path = file.path(tmp_dir, hydro_list$name[3]),
                overwrite = T)
 
 
-rf <- nc_open(file.path(tmp_dir, hydro_list$name[4]))
+rf <- nc_open(file.path(tmp_dir, hydro_list$name[3]))
 
 #get indices
 t <- ncvar_get(rf, 'Time')
@@ -725,10 +708,10 @@ lat <- ncvar_get(rf, 'Lat')
 lon <- ncvar_get(rf, 'Lon')
 
 #get array
-rf.array <- ncvar_get(rf, 'rainfall')
+rf.array <- ncvar_get(rf, 'precip')
 
 #get na value
-fillvalue <- ncatt_get(rf, "rainfall", "_FillValue")
+fillvalue <- ncatt_get(rf, "precip", "_FillValue")
 
 # close netcdf
 nc_close(rf)
@@ -761,17 +744,15 @@ tmap_save(filename = file.path('test', 'Floods_hydro.png'))
 unlink(file.path('temp2', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
+gc()
+
 
 
 
 ## Great ----
 shape_list <- SHAPE_LIST('Great', 'grt')
 #download them from drive
-for(i in 1:nrow(shape_list)){
-  drive_download(shape_list$id[i], 
-                 path = file.path(tmp_dir, shape_list$name[i]),
-                 overwrite = T)
-}
+map2(shape_list$id, shape_list$name, dr_down)
 
 #create shape_name from metadata
 shape_name = 'great.shp'
@@ -863,10 +844,10 @@ lat <- ncvar_get(rf, 'Lat')
 lon <- ncvar_get(rf, 'Lon')
 
 #get array
-rf.array <- ncvar_get(rf, 'rainfall')
+rf.array <- ncvar_get(rf, 'precip')
 
 #get na value
-fillvalue <- ncatt_get(rf, "rainfall", "_FillValue")
+fillvalue <- ncatt_get(rf, "precip", "_FillValue")
 
 # close netcdf
 nc_close(rf)
@@ -899,17 +880,16 @@ tmap_save(filename = file.path('test', 'Great_hydro.png'))
 unlink(file.path('temp2', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
+gc()
+
+
 
 
 
 ## Hadlock ----
 shape_list <- SHAPE_LIST('Hadlock', 'had')
 #download them from drive
-for(i in 1:nrow(shape_list)){
-  drive_download(shape_list$id[i], 
-                 path = file.path(tmp_dir, shape_list$name[i]),
-                 overwrite = T)
-}
+map2(shape_list$id, shape_list$name, dr_down)
 
 #create shape_name from metadata
 shape_name = 'hadlock.shp'
@@ -934,32 +914,32 @@ drive_download(clim_list$id[1],
                path = file.path(tmp_dir, clim_list$name[1]),
                overwrite = T)
 
-tempmax <- clim_list %>% filter(grepl('max', name))
+tempmin <- clim_list %>% filter(grepl('min', name))
 
-data_max <- nc_open(file.path(tmp_dir, tempmax$name))
+data_min <- nc_open(file.path(tmp_dir, tempmin$name))
 
 #get indices
-t <- ncvar_get(data_max, 'time')
-lat <- ncvar_get(data_max, 'lat')
-lon <- ncvar_get(data_max, 'lon')
+t <- ncvar_get(data_min, 'time')
+lat <- ncvar_get(data_min, 'lat')
+lon <- ncvar_get(data_min, 'lon')
 lon = lon - 360 #convert to degrees
 
 #get array
-maxtemp.array <- ncvar_get(data_max, 'tasmax')
+mintemp.array <- ncvar_get(data_min, 'tasmin')
 
 #get na value
-fillvalue <- ncatt_get(data_max, "tasmax", "_FillValue")
+fillvalue <- ncatt_get(data_min, "tasmin", "_FillValue")
 
 # close netcdf
-nc_close(data_max)
+nc_close(data_min)
 
 #recode na values
-maxtemp.array[maxtemp.array == fillvalue$value] <- NA
+mintemp.array[mintemp.array == fillvalue$value] <- NA
 
 #grab a slice and check
-maxtemp.slice <- maxtemp.array[, , 50, 5]
+mintemp.slice <- mintemp.array[, , 50, 5]
 
-r <- raster(t(maxtemp.slice), 
+r <- raster(t(mintemp.slice), 
             xmn=min(lon), 
             xmx=max(lon), 
             ymn=min(lat), 
@@ -979,7 +959,7 @@ tmap_save(filename = file.path('test', 'Hadlock_clim.png'))
 
 # clean up 
 unlink(file.path('temp2', clim_list$name))
-rm(clim_list, data_max, fillvalue, maxtemp.slice, r, tempmax, lat, lon, t, maxtemp.array)
+rm(clim_list, data_min, fillvalue, mintemp.slice, r, tempmin, lat, lon, t, mintemp.array)
 
 ### grab loca hydro files ----
 
@@ -988,12 +968,12 @@ hyd_fid <- COUNT_HYDRO('Hadlock')
 hydro_list <- HYDRO_LIST('Hadlock', 1)
 
 #download them from drive
-drive_download(hydro_list$id[4], 
-               path = file.path(tmp_dir, hydro_list$name[4]),
+drive_download(hydro_list$id[3], 
+               path = file.path(tmp_dir, hydro_list$name[3]),
                overwrite = T)
 
 
-rf <- nc_open(file.path(tmp_dir, hydro_list$name[4]))
+rf <- nc_open(file.path(tmp_dir, hydro_list$name[3]))
 
 #get indices
 t <- ncvar_get(rf, 'Time')
@@ -1001,10 +981,10 @@ lat <- ncvar_get(rf, 'Lat')
 lon <- ncvar_get(rf, 'Lon')
 
 #get array
-rf.array <- ncvar_get(rf, 'rainfall')
+rf.array <- ncvar_get(rf, 'precip')
 
 #get na value
-fillvalue <- ncatt_get(rf, "rainfall", "_FillValue")
+fillvalue <- ncatt_get(rf, "precip", "_FillValue")
 
 # close netcdf
 nc_close(rf)
@@ -1037,17 +1017,16 @@ tmap_save(filename = file.path('test', 'Hadlock_hydro.png'))
 unlink(file.path('temp2', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
+gc()
+
+
 
 
 
 ## Jordan ----
 shape_list <- SHAPE_LIST('Jordan', 'jor')
 #download them from drive
-for(i in 1:nrow(shape_list)){
-  drive_download(shape_list$id[i], 
-                 path = file.path(tmp_dir, shape_list$name[i]),
-                 overwrite = T)
-}
+map2(shape_list$id, shape_list$name, dr_down)
 
 #create shape_name from metadata
 shape_name = 'jordan.shp'
@@ -1072,32 +1051,32 @@ drive_download(clim_list$id[1],
                path = file.path(tmp_dir, clim_list$name[1]),
                overwrite = T)
 
-tempmax <- clim_list %>% filter(grepl('max', name))
+tempmin <- clim_list %>% filter(grepl('min', name))
 
-data_max <- nc_open(file.path(tmp_dir, tempmax$name))
+data_min <- nc_open(file.path(tmp_dir, tempmin$name))
 
 #get indices
-t <- ncvar_get(data_max, 'time')
-lat <- ncvar_get(data_max, 'lat')
-lon <- ncvar_get(data_max, 'lon')
+t <- ncvar_get(data_min, 'time')
+lat <- ncvar_get(data_min, 'lat')
+lon <- ncvar_get(data_min, 'lon')
 lon = lon - 360 #convert to degrees
 
 #get array
-maxtemp.array <- ncvar_get(data_max, 'tasmax')
+mintemp.array <- ncvar_get(data_min, 'tasmin')
 
 #get na value
-fillvalue <- ncatt_get(data_max, "tasmax", "_FillValue")
+fillvalue <- ncatt_get(data_min, "tasmin", "_FillValue")
 
 # close netcdf
-nc_close(data_max)
+nc_close(data_min)
 
 #recode na values
-maxtemp.array[maxtemp.array == fillvalue$value] <- NA
+mintemp.array[mintemp.array == fillvalue$value] <- NA
 
 #grab a slice and check
-maxtemp.slice <- maxtemp.array[, , 50, 5]
+mintemp.slice <- mintemp.array[, , 50, 5]
 
-r <- raster(t(maxtemp.slice), 
+r <- raster(t(mintemp.slice), 
             xmn=min(lon), 
             xmx=max(lon), 
             ymn=min(lat), 
@@ -1117,7 +1096,7 @@ tmap_save(filename = file.path('test', 'Jordan_clim.png'))
 
 # clean up 
 unlink(file.path('temp2', clim_list$name))
-rm(clim_list, data_max, fillvalue, maxtemp.slice, r, tempmax, lat, lon, t, maxtemp.array)
+rm(clim_list, data_min, fillvalue, mintemp.slice, r, tempmin, lat, lon, t, mintemp.array)
 
 ### grab loca hydro files ----
 
@@ -1126,12 +1105,12 @@ hyd_fid <- COUNT_HYDRO('Jordan')
 hydro_list <- HYDRO_LIST('Jordan', 1)
 
 #download them from drive
-drive_download(hydro_list$id[4], 
-               path = file.path(tmp_dir, hydro_list$name[4]),
+drive_download(hydro_list$id[3], 
+               path = file.path(tmp_dir, hydro_list$name[3]),
                overwrite = T)
 
 
-rf <- nc_open(file.path(tmp_dir, hydro_list$name[4]))
+rf <- nc_open(file.path(tmp_dir, hydro_list$name[3]))
 
 #get indices
 t <- ncvar_get(rf, 'Time')
@@ -1175,17 +1154,15 @@ tmap_save(filename = file.path('test', 'Jordan_hydro.png'))
 unlink(file.path('temp2', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
+gc()
+
 
 
 
 ## Rangely ----
 shape_list <- SHAPE_LIST('Rangeley', 'ran')
 #download them from drive
-for(i in 1:nrow(shape_list)){
-  drive_download(shape_list$id[i], 
-                 path = file.path(tmp_dir, shape_list$name[i]),
-                 overwrite = T)
-}
+map2(shape_list$id, shape_list$name, dr_down)
 
 #create shape_name from metadata
 shape_name = 'rangeley.shp'
@@ -1264,12 +1241,12 @@ hyd_fid <- COUNT_HYDRO('Rangeley')
 hydro_list <- HYDRO_LIST('Rangeley', 1)
 
 #download them from drive
-drive_download(hydro_list$id[4], 
-               path = file.path(tmp_dir, hydro_list$name[4]),
+drive_download(hydro_list$id[3], 
+               path = file.path(tmp_dir, hydro_list$name[3]),
                overwrite = T)
 
 
-rf <- nc_open(file.path(tmp_dir, hydro_list$name[4]))
+rf <- nc_open(file.path(tmp_dir, hydro_list$name[3]))
 
 #get indices
 t <- ncvar_get(rf, 'Time')
@@ -1277,10 +1254,10 @@ lat <- ncvar_get(rf, 'Lat')
 lon <- ncvar_get(rf, 'Lon')
 
 #get array
-rf.array <- ncvar_get(rf, 'rainfall')
+rf.array <- ncvar_get(rf, 'windspeed')
 
 #get na value
-fillvalue <- ncatt_get(rf, "rainfall", "_FillValue")
+fillvalue <- ncatt_get(rf, "windspeed", "_FillValue")
 
 # close netcdf
 nc_close(rf)
@@ -1313,17 +1290,15 @@ tmap_save(filename = file.path('test', 'Rangeley_hydro.png'))
 unlink(file.path('temp2', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
+gc()
+
 
 
 
 ## Sabattus ----
 shape_list <- SHAPE_LIST('Sabattus', 'sab')
 #download them from drive
-for(i in 1:nrow(shape_list)){
-  drive_download(shape_list$id[i], 
-                 path = file.path(tmp_dir, shape_list$name[i]),
-                 overwrite = T)
-}
+map2(shape_list$id, shape_list$name, dr_down)
 
 #create shape_name from metadata
 shape_name = 'sabattus.shp'
@@ -1416,10 +1391,10 @@ lat <- ncvar_get(rf, 'Lat')
 lon <- ncvar_get(rf, 'Lon')
 
 #get array
-rf.array <- ncvar_get(rf, 'windspeed')
+rf.array <- ncvar_get(rf, 'precip')
 
 #get na value
-fillvalue <- ncatt_get(rf, "windspeed", "_FillValue")
+fillvalue <- ncatt_get(rf, "precip", "_FillValue")
 
 # close netcdf
 nc_close(rf)
@@ -1452,16 +1427,15 @@ tmap_save(filename = file.path('test', 'Sabattus_hydro.png'))
 unlink(file.path('temp2', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
+gc()
+
+
 
 
 ## Sebago ----
 shape_list <- SHAPE_LIST('Sebago', 'seb')
 #download them from drive
-for(i in 1:nrow(shape_list)){
-  drive_download(shape_list$id[i], 
-                 path = file.path(tmp_dir, shape_list$name[i]),
-                 overwrite = T)
-}
+map2(shape_list$id, shape_list$name, dr_down)
 
 #create shape_name from metadata
 shape_name = 'sebago.shp'
@@ -1590,17 +1564,15 @@ tmap_save(filename = file.path('test', 'Sebago_hydro.png'))
 unlink(file.path('temp2', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
+gc()
+
 
 
 
 ##  Sunapee ----
 shape_list <- SHAPE_LIST('Sunapee', 'sun')
 #download them from drive
-for(i in 1:nrow(shape_list)){
-  drive_download(shape_list$id[i], 
-                 path = file.path(tmp_dir, shape_list$name[i]),
-                 overwrite = T)
-}
+map2(shape_list$id, shape_list$name, dr_down)
 
 #create shape_name from metadata
 shape_name = 'sunapee.shp'
@@ -1680,12 +1652,12 @@ hyd_fid <- COUNT_HYDRO('Sunapee')
 hydro_list <- HYDRO_LIST('Sunapee', 1)
 
 #download them from drive
-drive_download(hydro_list$id[4], 
-               path = file.path(tmp_dir, hydro_list$name[4]),
+drive_download(hydro_list$id[3], 
+               path = file.path(tmp_dir, hydro_list$name[3]),
                overwrite = T)
 
 
-rf <- nc_open(file.path(tmp_dir, hydro_list$name[4]))
+rf <- nc_open(file.path(tmp_dir, hydro_list$name[3]))
 
 #get indices
 t <- ncvar_get(rf, 'Time')
@@ -1729,17 +1701,15 @@ tmap_save(filename = file.path('test', 'Sunapee_hydro.png'))
 unlink(file.path('temp2', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
 
+gc()
+
 
 
 
 ## Yawgoo ----
 shape_list <- SHAPE_LIST('Yawgoo', 'yaw')
 #download them from drive
-for(i in 1:nrow(shape_list)){
-  drive_download(shape_list$id[i], 
-                 path = file.path(tmp_dir, shape_list$name[i]),
-                 overwrite = T)
-}
+map2(shape_list$id, shape_list$name, dr_down)
 
 #create shape_name from metadata
 shape_name = 'yawgoo.shp'
@@ -1819,12 +1789,12 @@ hyd_fid <- COUNT_HYDRO('Yawgoo')
 hydro_list <- HYDRO_LIST('Yawgoo', 1)
 
 #download them from drive
-drive_download(hydro_list$id[4], 
-               path = file.path(tmp_dir, hydro_list$name[4]),
+drive_download(hydro_list$id[3], 
+               path = file.path(tmp_dir, hydro_list$name[3]),
                overwrite = T)
 
 
-rf <- nc_open(file.path(tmp_dir, hydro_list$name[4]))
+rf <- nc_open(file.path(tmp_dir, hydro_list$name[3]))
 
 #get indices
 t <- ncvar_get(rf, 'Time')
@@ -1832,10 +1802,10 @@ lat <- ncvar_get(rf, 'Lat')
 lon <- ncvar_get(rf, 'Lon')
 
 #get array
-rf.array <- ncvar_get(rf, 'rainfall')
+rf.array <- ncvar_get(rf, 'precip')
 
 #get na value
-fillvalue <- ncatt_get(rf, "rainfall", "_FillValue")
+fillvalue <- ncatt_get(rf, "precip", "_FillValue")
 
 # close netcdf
 nc_close(rf)
@@ -1867,6 +1837,10 @@ tmap_save(filename = file.path('test', 'Yawgoo_hydro.png'))
 # clean up 
 unlink(file.path('temp2', hydro_list$name))
 rm(hydro_list, fillvalue, rf.slice, r, rf, lat, lon, t, rf.array)
+
+gc()
+
+
 
 ## clean up ----
 unlink('temp2', recursive = T)

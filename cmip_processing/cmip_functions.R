@@ -1,4 +1,4 @@
-# this script contains the functions used in the download_process_save script
+# this script contains the functilidons used in the download_process_save script
 
 SHAPE_LIST = function(lakename, lakeabb){
   lake_geo_id = drive_ls(as_id(geo_fid), pattern = tolower(lakename))$id
@@ -8,7 +8,7 @@ SHAPE_LIST = function(lakename, lakeabb){
 
 COUNT_CLIM = function(lakename) {
   #get the watershed folder
-  lake_cmip_fid = drive_ls(as_id(pid), pattern = lakename)$id
+  lake_cmip_fid = drive_ls(as_id(lid), pattern = lakename)$id
   #get the climate folder
   lake_clim_fid = drive_ls(as_id(lake_cmip_fid), pattern = 'cli')$id
 }
@@ -34,7 +34,7 @@ GET_VARNAME = function(ncfilename) {
 
 COUNT_HYDRO = function(lakename) {
   #get the watershed folder
-  lake_cmip_fid = drive_ls(as_id(pid), pattern = lakename)$id
+  lake_cmip_fid = drive_ls(as_id(lid), pattern = lakename)$id
   #get the climate folder
   lake_hyd_fid = drive_ls(as_id(lake_cmip_fid), pattern = 'hyd')$id
 }

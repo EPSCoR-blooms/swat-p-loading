@@ -6,7 +6,7 @@ folder <- drive_ls(path = as_id(inter_id), recursive = F) %>%
 
 down_id <- folder$id
 
-files <- drive_ls(as_id(down_id))
+files <- drive_ls(as_id(down_id), pattern = '.csv') 
 
 for(f in 1:nrow(files)){
   drive_download(as_id(files$id[f]), path = file.path('download', files$name[f]), overwrite = T)
