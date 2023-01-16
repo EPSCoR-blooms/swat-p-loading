@@ -7,17 +7,19 @@ dir.create('toupload')
 
 clim_fid <- COUNT_CLIM(lake_list$LakeName[l])
 
+dr_down = function(dr_id, dr_name){
+  drive_download(dr_id, 
+                 path = file.path(tmp_dir, dr_name),
+                 overwrite = T)
+}
+
 if(length(clim_fid) == 1) {
 
   clim_list <- CLIM_LIST(lake_list$LakeName[l], 1)
   
   #download them from drive
-  for(c in 1:nrow(clim_list)){
-    drive_download(clim_list$id[c], 
-                   path = file.path(tmp_dir, clim_list$name[c]),
-                   overwrite = T)
-  }
-  
+  map2(clim_list$id, clim_list$name, dr_down)
+    
 } else {
   
   for(cf in 1:length(clim_fid)) {
@@ -26,22 +28,18 @@ if(length(clim_fid) == 1) {
     clim_list <- CLIM_LIST(lake_list$LakeName[l], cf)
     
     #download them from drive
-    for(c in 1:nrow(clim_list)){
-      drive_download(clim_list$id[c], 
-                     path = file.path(tmp_dir, paste0(REMOVE_EXT(clim_list$name[c]), '_', cf, '.nc')),
-                     overwrite = T)
-    }
+    map2(clim_list$id, clim_list$name, dr_down)
   }
 }
 
 #get a list of downloaded files 
 netcdf_file <- list.files(tmp_dir)
 
-datelist = seq.Date(as.Date('1900-01-01'), as.Date('2051-01-01'), by = 'day')
+datelist = seq.Date(as.Date('2021-01-01'), as.Date('2099-12-31'), by = 'day')
 
 # extract all dates and all projections ----
 
-for(n in 1:length(netcdf_file)) {
+for(n in 1:length(netcdf_file)){
   message('Starting ', netcdf_file[n])
   var <- GET_VARNAME(netcdf_file[n])
   
@@ -74,8 +72,8 @@ for(n in 1:length(netcdf_file)) {
   
   clim_days = seq(1:length(t_c))
   last = as.numeric(length(t_c))
-  firstdate = datelist[t_c[2]]
-  lastdate = datelist[(as.numeric(t_c[1])+last)]
+  firstdate = datelist[1]
+  lastdate = datelist[last]
   clim_dates = seq.Date(firstdate, lastdate, by = 'day') #create date indices
   
   #close nc file

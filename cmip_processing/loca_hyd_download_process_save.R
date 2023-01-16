@@ -4,16 +4,18 @@
 message('Starting HYD extraction for ', lake_list$LakeName[l])
 hyd_fid <- COUNT_HYDRO(lake_list$LakeName[l])
 
+dr_down = function(dr_id, dr_name){
+  drive_download(dr_id, 
+                 path = file.path(tmp_dir, dr_name),
+                 overwrite = T)
+}
+
 if(length(hyd_fid) == 1) {
   
   hyd_list <- HYDRO_LIST(lake_list$LakeName[l], 1)
   
   #download them from drive
-  for(c in 1:nrow(hyd_list)){
-    drive_download(hyd_list$id[c], 
-                   path = file.path(tmp_dir, hyd_list$name[c]),
-                   overwrite = T)
-  }
+  map2(hyd_list$id, hyd_list$name, dr_down)
   
 } else {
   
@@ -23,11 +25,7 @@ if(length(hyd_fid) == 1) {
     hyd_list <- HYDRO_LIST(lake_list$LakeName[l], cf)
     
     #download them from drive
-    for(c in 1:nrow(hyd_list)){
-      drive_download(hyd_list$id[c], 
-                     path = file.path(tmp_dir, paste0(REMOVE_EXT(hyd_list$name[c]), '_', cf, '.nc')),
-                     overwrite = T)
-    }
+    map2(hyd_list$id, hyd_list$name, dr_down)
   }
 }
 
@@ -37,7 +35,7 @@ netcdf_file <- list.files(tmp_dir)
 #remove rainfall rate files
 netcdf_file <- netcdf_file[!grepl('rainfall', netcdf_file)]
 
-datelist = seq.Date(as.Date('1800-01-01'), as.Date('2051-01-01'), by = 'day')
+datelist = seq.Date(as.Date('2021-01-01'), as.Date('2099-12-31'), by = 'day')
 
 for(n in 1:length(netcdf_file)) {
   message('Starting ', netcdf_file[n])
@@ -69,8 +67,8 @@ for(n in 1:length(netcdf_file)) {
   
   hyd_days = seq(1:length(t_c))
   last = as.numeric(length(t_c))
-  firstdate = datelist[t_c[2]]
-  lastdate = datelist[(as.numeric(t_c[1])+last)]
+  firstdate = datelist[1]
+  lastdate = datelist[last]
   hyd_dates = seq.Date(firstdate, lastdate, by = 'day') #create date indices
   
   #close nc file
