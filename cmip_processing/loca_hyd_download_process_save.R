@@ -37,6 +37,28 @@ netcdf_file <- netcdf_file[!grepl('rainfall', netcdf_file)]
 
 datelist = seq.Date(as.Date('2021-01-01'), as.Date('2099-12-31'), by = 'day')
 
+
+proc_days_hyd = function(hyd_days, hyd_dates){
+  #grab a slice 
+  data.slice <- data.array[, , hyd_days, h_proj]
+  
+  r <- raster(t(data.slice), 
+              xmn=min(lon_c), 
+              xmx=max(lon_c), 
+              ymn=min(lat_c), 
+              ymx=max(lat_c),
+              crs='+init=EPSG:4326') # reported as WGS84 deg
+  r <- flip(r, direction='y') #flip the coord for proper projection
+  
+  #grab the weighted mean value
+  r_extract <- exactextractr::exact_extract(r, watershed, 
+                                            fun = c('weighted_mean', 'stdev'),
+                                            weights = 'area')
+  r_extract$date = hyd_dates
+  
+  r_extract  
+}
+
 for(n in 1:length(netcdf_file)) {
   message('Starting ', netcdf_file[n])
   var <- GET_VARNAME(netcdf_file[n])
@@ -76,9 +98,10 @@ for(n in 1:length(netcdf_file)) {
 
   for(p in 1:length(hyd_proj)){
     message('Starting projection ', hyd_proj[p])
-    for(d in 1:length(hyd_days)){
+    for(d in 1:length(hyd_days)){#and for each day
+      #grab a slice 
       data.slice <- data.array[, , hyd_days[d], hyd_proj[p]]
-      #make raster
+      
       r <- raster(t(data.slice), 
                   xmn=min(lon_c), 
                   xmx=max(lon_c), 
@@ -86,12 +109,11 @@ for(n in 1:length(netcdf_file)) {
                   ymx=max(lat_c),
                   crs='+init=EPSG:4326') # reported as WGS84 deg
       r <- flip(r, direction='y') #flip the coord for proper projection
-      #extract
+      
       #grab the weighted mean value
       r_extract <- exactextractr::exact_extract(r, watershed, 
                                                 fun = c('weighted_mean', 'stdev'),
                                                 weights = 'area')
-      #apply date
       r_extract$date = hyd_dates[d]
       
       if(d == 1) {
@@ -101,6 +123,8 @@ for(n in 1:length(netcdf_file)) {
       }
       if (d%%1000 == 0) { message(d) } 
     }
+
+    
     extract_all$parameter = var
     extract_all$cmip_projection = projection_list[p]
     

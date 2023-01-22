@@ -35,7 +35,8 @@ drive_auth()
 sd_id <- shared_drive_find(pattern = 'EPSCoR_SWAT')$id
 
 #find the folder you're interested in 
-info <- drive_ls(path = as_id(sd_id), pattern = '2100')
+info <- drive_ls(path = as_id(sd_id))
+info <- info[info$name == 'Daily Weather (2021-2100)',]
 print(info) #to confirm
 
 #store the id as fid
@@ -104,10 +105,12 @@ source('cmip_functions.R')
 
 ## SOURCE DOWNLOAD PROCESS SAVE SCRIPT ----
 
-for(l in 1:nrow(lake_list)) {
+for(l in 4:nrow(lake_list)) {
   source('grab_watershed.R')
   source('loca_clim_download_process_save.R')
+  gc()
   source('loca_hyd_download_process_save.R')
+  gc()
   source('upload_cmip_to_drive.R')
 }
 

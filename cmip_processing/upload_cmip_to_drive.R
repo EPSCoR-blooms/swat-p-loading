@@ -10,7 +10,7 @@ dr_upload = function(lakeName, f_upload){
   drive_upload(file.path('toupload',f_upload), path = lid$id, overwrite = T)
 }
 
-map2(lake_list$LakeName[l], upload)
+map2(lake_list$LakeName[l], upload, dr_upload)
 
 
 # for(u in 1:length(upload)){

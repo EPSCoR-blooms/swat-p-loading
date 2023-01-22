@@ -21,4 +21,4 @@ watershed <- st_read(file.path(tmp_dir, shape_name))
 watershed <- st_transform(watershed, 4326) #transform to WGS84
 
 #remove temp files
-unlink(file.path('temp', shape_list$name))
+unlink(file.path('temp/', shape_list$name))
