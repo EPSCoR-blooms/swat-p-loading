@@ -195,3 +195,5 @@ for(l in 1:length(lake_names)) {
   }
 }
 
+## unlink tmp folder
+unlink('tmp', recursive = T)
