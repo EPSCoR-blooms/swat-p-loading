@@ -1,10 +1,7 @@
 
-message('Downloading files for ', collate$LakeName[c])
+message('Downloading files for ', lake_names[l])
 
-folder <- drive_ls(path = as_id(inter_id), recursive = F) %>% 
-  filter(name == collate$LakeName[c])
-
-down_id <- folder$id
+down_id <- lake_upload_id
 
 files <- drive_ls(as_id(down_id), pattern = '.csv') 
 
@@ -24,10 +21,3 @@ for(cf in 1:length(cmip_files)){
   }
 }
 
-
-## create directories for all the models ----
-projection_list=unique(collated$cmip_projection)
-
-for(pl in 1:length(projection_list)) {
-  drive_mkdir(name = projection_list[pl], path = as_id(lake_upload_id), overwrite = T)
-}
