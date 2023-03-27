@@ -35,23 +35,25 @@ drive_auth()
 sd_id <- shared_drive_find(pattern = 'EPSCoR_SWAT')$id
 
 #find the folder you're interested in 
-info <- drive_ls(path = as_id(sd_id), pattern = 'Daily Weather')
+info <- drive_ls(path = as_id(sd_id))
+info <- info[info$name == 'Daily Weather (2021-2100)',]
 print(info) #to confirm
 
 #store the id as fid
 fid <- info$id
 
 #grab the folder identity for the watershed shapefiles
-geo_fid <- drive_ls(as_id(fid), pattern = 'Shape')$id
+geo_fid <- drive_ls(as_id(sd_id), pattern = 'Shape')$id
 
 #grab the folder identity for the finalized delineations
 folder_info <- drive_ls(as_id(fid), pattern = 'Final')
 print(folder_info)
+
 #filter out the pending files
-pid <- (folder_info %>% filter(!grepl('Pending', name)))$id
+lid <- (folder_info %>% filter(!grepl('Pending', name)))$id
 
 ## grap intermediary save location ----
-inter_id <- drive_ls(as_id(sd_id), 'intermediary')$id
+inter_id <- drive_ls(as_id(sd_id), 'intermediary_2021')$id
 
 
 # GRAB THE METADATA FILE THAT CONTAINS THE LIST FOR PROCESSING ----
@@ -69,27 +71,26 @@ sheets <- excel_sheets(file.path(tmp_dir, 'metadata.xlsx'))
 #remove future sheets
 sheets <- sheets[!grepl('future', sheets) & ! grepl('complete', sheets)]
 
-for(i in 1:length(sheets)) {
+lake_down = function(sh){
   lake_list <- read_xlsx(file.path(tmp_dir, 'metadata.xlsx'),
-                         sheet = sheets[i]) 
-  lake_list$sheet = sheets[i]
-  if(i == 1) {
-    alllakes <- lake_list
-  } else {
-    alllakes <- full_join(alllakes, lake_list)
-  }
+                         sheet = sh) 
+  lake_list$sheet = sh
+  lake_list
 }
 
-# remove previously-processed lakes
-complete <- read_xlsx(file.path(tmp_dir, 'metadata.xlsx'),
-                      sheet = 'complete')
-if(nrow(complete >0)) {
-  complete_lakes = complete$LakeName
-  drop_list <- alllakes %>% 
-    filter(LakeName %in% complete_lakes)
-  lake_list <- anti_join(alllakes, drop_list)
-}
+all_lakes = lake_down(sheets)
 
+# remove previously-processed lakes 
+# complete <- read_xlsx(file.path(tmp_dir, 'metadata.xlsx'),
+#                       sheet = 'complete')
+# if(nrow(complete >0)) {
+#   complete_lakes = complete$LakeName
+#   drop_list <- alllakes %>% 
+#     filter(LakeName %in% complete_lakes)
+#   lake_list <- anti_join(alllakes, drop_list)
+# }
+
+lake_list <- all_lakes
 
 # IMPORTANT: ####
 # double check the lake list here and make sure it's extracting the correct lakes before moving on. ##
@@ -104,10 +105,12 @@ source('cmip_functions.R')
 
 ## SOURCE DOWNLOAD PROCESS SAVE SCRIPT ----
 
-for(l in 1:nrow(lake_list)) {
+for(l in 4:nrow(lake_list)) {
   source('grab_watershed.R')
   source('loca_clim_download_process_save.R')
+  gc()
   source('loca_hyd_download_process_save.R')
+  gc()
   source('upload_cmip_to_drive.R')
 }
 

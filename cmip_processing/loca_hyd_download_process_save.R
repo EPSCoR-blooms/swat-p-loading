@@ -4,16 +4,18 @@
 message('Starting HYD extraction for ', lake_list$LakeName[l])
 hyd_fid <- COUNT_HYDRO(lake_list$LakeName[l])
 
+dr_down = function(dr_id, dr_name){
+  drive_download(dr_id, 
+                 path = file.path(tmp_dir, dr_name),
+                 overwrite = T)
+}
+
 if(length(hyd_fid) == 1) {
   
   hyd_list <- HYDRO_LIST(lake_list$LakeName[l], 1)
   
   #download them from drive
-  for(c in 1:nrow(hyd_list)){
-    drive_download(hyd_list$id[c], 
-                   path = file.path(tmp_dir, hyd_list$name[c]),
-                   overwrite = T)
-  }
+  map2(hyd_list$id, hyd_list$name, dr_down)
   
 } else {
   
@@ -23,11 +25,7 @@ if(length(hyd_fid) == 1) {
     hyd_list <- HYDRO_LIST(lake_list$LakeName[l], cf)
     
     #download them from drive
-    for(c in 1:nrow(hyd_list)){
-      drive_download(hyd_list$id[c], 
-                     path = file.path(tmp_dir, paste0(REMOVE_EXT(hyd_list$name[c]), '_', cf, '.nc')),
-                     overwrite = T)
-    }
+    map2(hyd_list$id, hyd_list$name, dr_down)
   }
 }
 
@@ -37,7 +35,29 @@ netcdf_file <- list.files(tmp_dir)
 #remove rainfall rate files
 netcdf_file <- netcdf_file[!grepl('rainfall', netcdf_file)]
 
-datelist = seq.Date(as.Date('1800-01-01'), as.Date('2051-01-01'), by = 'day')
+datelist = seq.Date(as.Date('2021-01-01'), as.Date('2099-12-31'), by = 'day')
+
+
+proc_days_hyd = function(hyd_days, hyd_dates){
+  #grab a slice 
+  data.slice <- data.array[, , hyd_days, h_proj]
+  
+  r <- raster(t(data.slice), 
+              xmn=min(lon_c), 
+              xmx=max(lon_c), 
+              ymn=min(lat_c), 
+              ymx=max(lat_c),
+              crs='+init=EPSG:4326') # reported as WGS84 deg
+  r <- flip(r, direction='y') #flip the coord for proper projection
+  
+  #grab the weighted mean value
+  r_extract <- exactextractr::exact_extract(r, watershed, 
+                                            fun = c('weighted_mean', 'stdev'),
+                                            weights = 'area')
+  r_extract$date = hyd_dates
+  
+  r_extract  
+}
 
 for(n in 1:length(netcdf_file)) {
   message('Starting ', netcdf_file[n])
@@ -69,8 +89,8 @@ for(n in 1:length(netcdf_file)) {
   
   hyd_days = seq(1:length(t_c))
   last = as.numeric(length(t_c))
-  firstdate = datelist[t_c[2]]
-  lastdate = datelist[(as.numeric(t_c[1])+last)]
+  firstdate = datelist[1]
+  lastdate = datelist[last]
   hyd_dates = seq.Date(firstdate, lastdate, by = 'day') #create date indices
   
   #close nc file
@@ -78,9 +98,10 @@ for(n in 1:length(netcdf_file)) {
 
   for(p in 1:length(hyd_proj)){
     message('Starting projection ', hyd_proj[p])
-    for(d in 1:length(hyd_days)){
+    for(d in 1:length(hyd_days)){#and for each day
+      #grab a slice 
       data.slice <- data.array[, , hyd_days[d], hyd_proj[p]]
-      #make raster
+      
       r <- raster(t(data.slice), 
                   xmn=min(lon_c), 
                   xmx=max(lon_c), 
@@ -88,12 +109,11 @@ for(n in 1:length(netcdf_file)) {
                   ymx=max(lat_c),
                   crs='+init=EPSG:4326') # reported as WGS84 deg
       r <- flip(r, direction='y') #flip the coord for proper projection
-      #extract
+      
       #grab the weighted mean value
       r_extract <- exactextractr::exact_extract(r, watershed, 
                                                 fun = c('weighted_mean', 'stdev'),
                                                 weights = 'area')
-      #apply date
       r_extract$date = hyd_dates[d]
       
       if(d == 1) {
@@ -103,6 +123,8 @@ for(n in 1:length(netcdf_file)) {
       }
       if (d%%1000 == 0) { message(d) } 
     }
+
+    
     extract_all$parameter = var
     extract_all$cmip_projection = projection_list[p]
     
