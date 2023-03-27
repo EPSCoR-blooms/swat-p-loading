@@ -3,9 +3,8 @@ This folder contains scripts to process the manually-downloaded CMIP LOCA climat
 
 ## General file locations
 
-* CMIP LOCA files are located in the Google Drive Folder 'Daily Weather (1976-2050)'; created by Lars Gundersen (lgunders@bates.edu)
-* Watershed shape files are located in the above folder as well. These are the SWAT-derived watersheds.
-* extracted .csvs of the CMIP files are currently stored in the [Dropbox folder 'EPSCoR_swat'](https://www.dropbox.com/sh/s0vr0ojhf7kt9hp/AABeHATrYE07CTvNhy3sOU1ta?dl=0); created by B. Steele (steeleb@caryinstitute.org/bsteele@bates.edu) and have also been zipped to the Drive folder location *Daily Weather (1976-2050)/extracted_files/uncollated_zip*
+* CMIP LOCA files are located in the Google Drive Folder 'Daily Weather (2021-2100)'; created by Lars Gundersen (lgunders@bates.edu)
+* Watershed shape files are located in the shared drive as well. These are the SWAT-derived watersheds.
 
 
 ## Overarching Workflow
@@ -18,7 +17,7 @@ This folder contains scripts to process the manually-downloaded CMIP LOCA climat
 
 4) Extract the CMIP netcdf's for each SWAT-derived watershed.
 
-5) Collate the extraction files for SWAT input.
+5) Collate the extraction files so that they can be collated with the NLDAS/PRISM data
 
 
 ## Specific Repository Code Workflow
@@ -37,11 +36,10 @@ All scripts are meant to be run with the R Project file 'cmip_processing.Rproj' 
  
  - *upload_cmip_to_drive.R*: this script takes the locally-saved files, uploads them to Drive, then removes the files stored locally.
  
-*2_collate_upload.R*: this script collates the extracted CMIP files from the user-specified folder and formats them into SWAT-friendly formats. It sources the following scripts to complete this task:
+*2_collate_upload.R*: this script collates the extracted CMIP files from the user-specified folder and uploads the data as a single file per lake. It sources the following script to complete this task:
 
  - *download_from_drive.R*: this script downloads the intermediary files from the Shared Drive to a local place for collation
- 
- - *collate_PARAMETER.R*: these scripts collate the parameter listed in the title of the file.
+
  
 
 Sourced scripts:
