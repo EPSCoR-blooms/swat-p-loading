@@ -6,11 +6,6 @@ library(googledrive)
 library(readxl)
 
 
-## create temporary and export folders for Drive downloads/uploads ----
-tmp_dir = 'temp/'
-dir.create(tmp_dir)
-
-
 # authorize google drive ----
 drive_auth(email = 'steeleb@caryinstitute.org')
 
